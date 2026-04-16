@@ -14,6 +14,7 @@ app.use(express.json());
 // API 路由
 app.use('/api/auth', require('./src/routes/auth'));
 app.use('/api/items', require('./src/routes/items'));
+app.use('/api/webhook', require('./src/routes/webhook'));
 
 // 健康检查
 app.get('/health', (req, res) => {
