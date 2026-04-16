@@ -1,21 +1,19 @@
 <template>
-  <RouterLink :to="`/article/${item.slug}`" class="card article-card">
-    <div class="card-body">
-      <div class="card-meta">
+  <RouterLink :to="`/article/${item.slug}`" class="feed-item">
+    <div class="item-left">
+      <div class="item-meta">
         <span class="tag">{{ item.category }}</span>
-        <span class="text-muted text-sm">{{ formatDate(item.date) }}</span>
+        <span class="item-date">{{ formatDate(item.date) }}</span>
       </div>
-      <h2 class="card-title">{{ item.title }}</h2>
-      <p v-if="item.summary" class="card-summary">{{ item.summary }}</p>
-      <div v-if="item.tags.length" class="card-tags">
-        <span v-for="tag in item.tags.slice(0, 3)" :key="tag" class="tag">{{ tag }}</span>
-      </div>
+      <h2 class="item-title">{{ item.title }}</h2>
+      <p v-if="item.summary" class="item-summary">{{ item.summary }}</p>
     </div>
+    <div class="item-arrow">→</div>
   </RouterLink>
 </template>
 
 <script setup>
-const props = defineProps({ item: Object });
+defineProps({ item: Object });
 
 function formatDate(d) {
   if (!d) return '';
@@ -24,37 +22,74 @@ function formatDate(d) {
 </script>
 
 <style scoped>
-.article-card {
-  display: block;
-  padding: 1.25rem;
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.35rem 0;
+  border-bottom: 1px solid var(--border);
   text-decoration: none;
   color: inherit;
-  transition: transform 0.15s, box-shadow 0.15s;
+  transition: all 0.15s;
+  position: relative;
 }
-.article-card:hover { transform: translateY(-2px); color: inherit; }
-.card-meta {
+.feed-item::before {
+  content: '';
+  position: absolute;
+  left: -1.5rem;
+  top: 0; bottom: 0;
+  width: 3px;
+  background: var(--accent);
+  border-radius: 0 2px 2px 0;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.feed-item:hover::before { opacity: 1; }
+.feed-item:last-child { border-bottom: none; }
+
+.item-left { flex: 1; min-width: 0; }
+
+.item-meta {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  margin-bottom: 0.6rem;
+  margin-bottom: 0.45rem;
 }
-.card-title {
-  font-size: 1.05rem;
-  font-weight: 600;
-  line-height: 1.4;
-  margin-bottom: 0.5rem;
+.item-date {
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
+}
+.item-title {
+  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-weight: 700;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
   color: var(--text);
+  margin-bottom: 0.35rem;
+  transition: color 0.15s;
 }
-.article-card:hover .card-title { color: var(--accent); }
-.card-summary {
+.feed-item:hover .item-title { color: var(--accent); }
+.item-summary {
   font-size: 0.875rem;
   color: var(--text-muted);
   line-height: 1.6;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  margin-bottom: 0.75rem;
 }
-.card-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+.item-arrow {
+  font-size: 1.1rem;
+  color: var(--text-light);
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+.feed-item:hover .item-arrow {
+  color: var(--accent);
+  transform: translateX(3px);
+}
 </style>

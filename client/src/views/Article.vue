@@ -8,26 +8,33 @@
         <div v-else-if="!item" class="empty">
           <div class="empty-icon">🔍</div>
           <p>文章不存在</p>
-          <RouterLink to="/" class="btn btn-ghost" style="margin-top:1rem">← 返回首页</RouterLink>
+          <RouterLink to="/" class="btn btn-ghost" style="margin-top:1.5rem">← 返回首页</RouterLink>
         </div>
 
         <template v-else>
-          <div class="article-header">
+          <!-- 返回 -->
+          <RouterLink to="/" class="back-link">← 返回</RouterLink>
+
+          <!-- 文章头部 -->
+          <header class="article-header">
             <div class="header-meta">
               <RouterLink :to="`/category/${item.category}`" class="tag">{{ item.category }}</RouterLink>
-              <span class="text-muted text-sm">{{ formatDate(item.date) }}</span>
+              <time class="header-date">{{ formatDate(item.date) }}</time>
             </div>
             <h1 class="article-title">{{ item.title }}</h1>
-            <p v-if="item.summary" class="article-summary">{{ item.summary }}</p>
+            <p v-if="item.summary" class="article-lead">{{ item.summary }}</p>
             <div v-if="item.tags.length" class="article-tags">
               <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
             </div>
-          </div>
+          </header>
 
-          <div class="article-body card">
+          <!-- 正文 -->
+          <div class="article-rule" />
+          <article class="article-body">
             <div class="md-content" v-html="item.content" />
-          </div>
+          </article>
 
+          <!-- 底部 -->
           <div class="article-footer">
             <RouterLink to="/" class="btn btn-ghost">← 返回列表</RouterLink>
           </div>
@@ -65,32 +72,60 @@ onMounted(async () => {
 
 <style scoped>
 .site { min-height: 100vh; }
-.main { padding: 2rem 0 4rem; }
-.container { max-width: 800px; }
+.main { padding: 2rem 0 5rem; }
+.container { max-width: 760px; }
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 2.5rem;
+  transition: color 0.15s;
+}
+.back-link:hover { color: var(--accent); }
+
 .article-header { margin-bottom: 2rem; }
 .header-meta {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.75rem;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+.header-date {
+  font-size: 0.8rem;
+  font-family: var(--font-display);
+  font-weight: 500;
+  color: var(--text-muted);
+  letter-spacing: 0.02em;
 }
 .article-title {
-  font-size: 2rem;
+  font-size: clamp(2rem, 5vw, 2.9rem);
   font-weight: 700;
-  line-height: 1.3;
-  margin-bottom: 0.75rem;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  margin-bottom: 1.1rem;
 }
-.article-summary {
-  font-size: 1.05rem;
+.article-lead {
+  font-size: 1.1rem;
   color: var(--text-muted);
-  line-height: 1.7;
-  margin-bottom: 0.75rem;
+  line-height: 1.75;
+  margin-bottom: 1rem;
 }
 .article-tags { display: flex; gap: 0.4rem; flex-wrap: wrap; }
-.article-body { padding: 2rem; }
-.article-footer { margin-top: 2rem; }
-@media (max-width: 640px) {
-  .article-title { font-size: 1.5rem; }
-  .article-body { padding: 1.25rem; }
+
+.article-rule {
+  height: 2px;
+  background: var(--border);
+  margin-bottom: 2.5rem;
 }
+.article-body { margin-bottom: 3rem; }
+
+.article-footer { padding-top: 2rem; border-top: 1px solid var(--border); }
 </style>

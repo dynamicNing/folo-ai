@@ -1,15 +1,15 @@
 <template>
   <div class="page">
-    <div class="page-header">
+    <div class="page-head">
       <h1 class="page-title">内容管理</h1>
-      <div class="header-actions">
-        <select v-model="filterStatus" @change="load" class="filter-select">
+      <div class="filters">
+        <select v-model="filterStatus" @change="load" class="filter-sel">
           <option value="">全部状态</option>
           <option value="published">已发布</option>
           <option value="draft">草稿</option>
           <option value="archived">已归档</option>
         </select>
-        <select v-model="filterCategory" @change="load" class="filter-select">
+        <select v-model="filterCategory" @change="load" class="filter-sel">
           <option value="">全部分类</option>
           <option v-for="c in categories" :key="c" :value="c">{{ c }}</option>
         </select>
@@ -17,13 +17,11 @@
     </div>
 
     <div v-if="loading" class="loading"><div class="spinner" />加载中...</div>
-
     <div v-else-if="items.length === 0" class="empty">
-      <div class="empty-icon">📭</div>
-      <p>暂无内容</p>
+      <div class="empty-icon">📭</div><p>暂无内容</p>
     </div>
 
-    <div v-else class="table-wrap card">
+    <div v-else class="table-box">
       <table class="table">
         <thead>
           <tr>
@@ -37,27 +35,25 @@
         <tbody>
           <tr v-for="item in items" :key="item.slug">
             <td class="td-title">
-              <RouterLink :to="`/admin/items/${item.slug}`" class="item-title-link">
-                {{ item.title }}
-              </RouterLink>
-              <span v-if="item.tags.length" class="td-tags">
-                <span v-for="t in item.tags.slice(0,2)" :key="t" class="tag" style="font-size:0.7rem">{{ t }}</span>
-              </span>
+              <RouterLink :to="`/admin/items/${item.slug}`" class="title-link">{{ item.title }}</RouterLink>
+              <div v-if="item.tags.length" class="td-tags">
+                <span v-for="t in item.tags.slice(0,2)" :key="t" class="tag" style="font-size:0.62rem">{{ t }}</span>
+              </div>
             </td>
             <td><span class="tag">{{ item.category }}</span></td>
             <td>
               <select
                 :value="item.status"
                 @change="changeStatus(item, $event.target.value)"
-                class="status-select"
-                :class="`status-${item.status}`"
+                class="status-sel"
+                :class="`s-${item.status}`"
               >
                 <option value="published">已发布</option>
                 <option value="draft">草稿</option>
                 <option value="archived">已归档</option>
               </select>
             </td>
-            <td class="text-muted text-sm">{{ formatDate(item.date) }}</td>
+            <td class="td-date text-muted text-sm">{{ formatDate(item.date) }}</td>
             <td>
               <div class="td-actions">
                 <RouterLink :to="`/article/${item.slug}`" target="_blank" class="btn btn-ghost btn-sm">预览</RouterLink>
@@ -75,12 +71,13 @@
       <button class="page-btn" :disabled="page >= totalPages" @click="go(page + 1)">下一页 →</button>
     </div>
 
-    <!-- 删除确认弹窗 -->
-    <div v-if="deleteTarget" class="modal-mask" @click.self="deleteTarget = null">
-      <div class="modal card">
-        <h3>确认删除</h3>
-        <p class="text-muted" style="margin:0.75rem 0">「{{ deleteTarget.title }}」将移入回收站，确定吗？</p>
-        <div class="modal-actions">
+    <!-- 删除确认 -->
+    <div v-if="deleteTarget" class="mask" @click.self="deleteTarget = null">
+      <div class="dialog">
+        <div class="dialog-icon">⚠</div>
+        <h3 class="dialog-title">确认删除</h3>
+        <p class="dialog-body">「{{ deleteTarget.title }}」将移入回收站。</p>
+        <div class="dialog-actions">
           <button class="btn btn-ghost" @click="deleteTarget = null">取消</button>
           <button class="btn btn-danger" @click="doDelete">确认删除</button>
         </div>
@@ -113,109 +110,139 @@ async function load() {
     const res = await api.getItems(params);
     items.value = res.data;
     totalPages.value = res.totalPages;
-  } finally {
-    loading.value = false;
-  }
+  } finally { loading.value = false; }
 }
-
 async function changeStatus(item, status) {
   try {
     await api.updateStatus(item.slug, status, auth.authHeader());
     item.status = status;
-  } catch (e) {
-    alert(e.message);
-  }
+  } catch (e) { alert(e.message); }
 }
-
 function confirmDelete(item) { deleteTarget.value = item; }
-
 async function doDelete() {
   try {
     await api.deleteItem(deleteTarget.value.slug, auth.authHeader());
     items.value = items.value.filter(i => i.slug !== deleteTarget.value.slug);
     deleteTarget.value = null;
-  } catch (e) {
-    alert(e.message);
-  }
+  } catch (e) { alert(e.message); }
 }
-
 function go(p) { page.value = p; load(); }
-
 function formatDate(d) {
   if (!d) return '-';
   return new Date(d).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric' });
 }
-
 onMounted(async () => {
-  [categories.value] = await Promise.all([
-    api.getCategories(),
-  ]);
+  categories.value = await api.getCategories();
   await load();
 });
 </script>
 
 <style scoped>
-.page { padding: 2rem; }
-.page-header { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
-.page-title { font-size: 1.5rem; font-weight: 700; flex: 1; }
-.header-actions { display: flex; gap: 0.75rem; }
-.filter-select {
+.page { padding: 2rem 2rem 4rem; }
+.page-head {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1.5px solid var(--border);
+  padding-bottom: 1.25rem;
+  flex-wrap: wrap;
+}
+.page-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; flex: 1; }
+.filters { display: flex; gap: 0.6rem; }
+.filter-sel {
   padding: 0.4rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius-sm);
   background: var(--bg-card);
   color: var(--text);
-  font-size: 0.875rem;
+  font-size: 0.82rem;
+  font-family: var(--font-display);
+  font-weight: 600;
   cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
 }
-.table-wrap { overflow-x: auto; }
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.875rem;
+.filter-sel:focus { border-color: var(--accent); }
+
+.table-box {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  box-shadow: var(--shadow);
 }
+.table { width: 100%; border-collapse: collapse; font-size: 0.875rem; }
 .table th {
   text-align: left;
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border);
-  font-weight: 600;
+  padding: 0.7rem 1rem;
+  border-bottom: 1.5px solid var(--border);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
   color: var(--text-muted);
   white-space: nowrap;
+  background: var(--bg-raised);
 }
 .table td {
-  padding: 0.75rem 1rem;
+  padding: 0.8rem 1rem;
   border-bottom: 1px solid var(--border);
   vertical-align: middle;
 }
 .table tr:last-child td { border-bottom: none; }
-.td-title { min-width: 200px; }
-.item-title-link { font-weight: 500; color: var(--text); display: block; }
-.item-title-link:hover { color: var(--accent); }
-.td-tags { display: flex; gap: 0.3rem; margin-top: 0.25rem; flex-wrap: wrap; }
-.status-select {
-  padding: 0.25rem 0.5rem;
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  font-size: 0.8rem;
-  cursor: pointer;
-  font-weight: 500;
+.table tr:hover td { background: var(--bg-raised); }
+.td-title { min-width: 220px; }
+.title-link {
+  font-weight: 600;
+  color: var(--text);
+  display: block;
+  transition: color 0.15s;
 }
-.status-published { border-color: var(--status-published); color: var(--status-published); background: rgba(40,167,69,0.08); }
-.status-draft { border-color: var(--status-draft); color: var(--status-draft); background: rgba(108,117,125,0.08); }
-.status-archived { border-color: var(--status-archived); color: var(--status-archived); background: rgba(253,126,20,0.08); }
-.td-actions { display: flex; gap: 0.5rem; }
+.title-link:hover { color: var(--accent); }
+.td-tags { display: flex; gap: 0.3rem; margin-top: 0.3rem; flex-wrap: wrap; }
+.status-sel {
+  padding: 0.25rem 0.55rem;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-mid);
+  font-size: 0.75rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  outline: none;
+  transition: all 0.15s;
+}
+.s-published { border-color: var(--status-ok); color: var(--status-ok); background: rgba(21,128,61,0.06); }
+.s-draft { border-color: var(--status-gray); color: var(--status-gray); background: rgba(100,116,139,0.06); }
+.s-archived { border-color: var(--status-warn); color: var(--status-warn); background: rgba(180,83,9,0.06); }
+.td-date { white-space: nowrap; }
+.td-actions { display: flex; gap: 0.4rem; }
 
-/* 弹窗 */
-.modal-mask {
+/* 删除弹窗 */
+.mask {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.5);
+  background: rgba(0,0,0,0.55);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 999;
+  backdrop-filter: blur(2px);
 }
-.modal { padding: 1.5rem; max-width: 360px; width: 90%; }
-.modal h3 { font-size: 1.1rem; font-weight: 600; }
-.modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
+.dialog {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 2rem;
+  max-width: 340px;
+  width: 90%;
+  box-shadow: var(--shadow-md);
+  text-align: center;
+}
+.dialog-icon { font-size: 1.75rem; margin-bottom: 0.75rem; }
+.dialog-title { font-size: 1.1rem; font-weight: 700; margin-bottom: 0.5rem; }
+.dialog-body { font-size: 0.875rem; color: var(--text-muted); margin-bottom: 1.5rem; line-height: 1.6; }
+.dialog-actions { display: flex; gap: 0.75rem; justify-content: center; }
 </style>
