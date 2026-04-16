@@ -1,19 +1,32 @@
 {
   "name": "folo-ai",
   "version": "1.0.0",
-  "description": "",
+  "description": "个人信息聚合站点 - folo-ai.com",
   "main": "index.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "client:dev": "vite --config client/vite.config.js",
+    "build": "vite build --config client/vite.config.js"
   },
-  "description": "个人信息聚合站点 - folo-ai.com",
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
     "express": "^5.2.1",
-    "helmet": "^8.1.0"
+    "gray-matter": "^4.0.3",
+    "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.3",
+    "marked": "^18.0.0",
+    "pinia": "^3.0.4",
+    "vue": "^3.5.32",
+    "vue-router": "^5.0.4"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.6",
+    "vite": "^8.0.8"
   }
 }
