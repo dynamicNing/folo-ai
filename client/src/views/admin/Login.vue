@@ -4,7 +4,7 @@
       <div class="login-brand">
         folo<span class="brand-accent">-</span>ai
       </div>
-      <div class="login-sub">管理后台</div>
+      <div class="login-sub">Follow One Step · 管理后台</div>
 
       <form @submit.prevent="submit" class="login-form">
         <div class="field">

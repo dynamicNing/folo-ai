@@ -3,7 +3,8 @@
     <div class="container nav-inner">
 
       <RouterLink to="/" class="nav-logo">
-        folo<span class="logo-accent">-</span>ai
+        <span class="logo-name">folo<span class="logo-accent">-</span>ai</span>
+        <span class="logo-tag">Follow One Step</span>
       </RouterLink>
 
       <div class="nav-links">
@@ -62,17 +63,30 @@ onMounted(async () => {
   gap: 2rem;
 }
 .nav-logo {
+  display: flex;
+  align-items: baseline;
+  gap: 0.55rem;
+  text-decoration: none;
+  flex-shrink: 0;
+  transition: opacity 0.15s;
+}
+.nav-logo:hover { opacity: 0.75; }
+.logo-name {
   font-family: var(--font-display);
   font-size: 1.25rem;
   font-weight: 700;
   color: var(--text);
-  text-decoration: none;
   letter-spacing: -0.03em;
-  flex-shrink: 0;
-  transition: opacity 0.15s;
 }
-.nav-logo:hover { opacity: 0.75; color: var(--text); }
 .logo-accent { color: var(--accent); }
+.logo-tag {
+  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
 
 .nav-links {
   display: flex;

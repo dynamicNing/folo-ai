@@ -1,7 +1,7 @@
 # folo-ai
 
-> 个人 AI 信息聚合站点 · folo-ai.com  
-> 只慢别人一步
+> **Follow One Step** — 永远比信息快一步  
+> folo-ai.com
 
 基于 Node/Express + Vue3 构建的个人信息聚合站，以 Markdown 文件为数据源，支持亮/暗色主题切换和管理后台。
 
