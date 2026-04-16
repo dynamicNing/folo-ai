@@ -24,7 +24,11 @@ app.get('/health', (req, res) => {
 });
 
 // 兜底
-app.get('*', (req, res) => {
+app.get('/{*path}', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
 
