@@ -116,7 +116,7 @@ onMounted(load);
   letter-spacing: 0.03em;
 }
 .hero-title {
-  font-size: clamp(1.9rem, 4vw, 3rem);
+  font-size: clamp(1.6rem, 5vw, 3rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -132,7 +132,7 @@ onMounted(load);
   max-width: 680px;
   margin-bottom: 1.25rem;
 }
-.hero-tags { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; }
+.hero-tags { display: flex; gap: 0.4rem; margin-bottom: 1.25rem; flex-wrap: wrap; }
 .hero-cta {
   display: inline-flex;
   align-items: center;
@@ -166,4 +166,12 @@ onMounted(load);
 
 /* ── Feed ── */
 .feed { display: flex; flex-direction: column; }
+
+/* ── Mobile ── */
+@media (max-width: 480px) {
+  .main { padding: 1.5rem 0 4rem; }
+  .hero { padding: 1.5rem 0 1.5rem; }
+  .hero-summary { font-size: 0.95rem; }
+  .section-header { padding: 1.25rem 0 0.75rem; }
+}
 </style>

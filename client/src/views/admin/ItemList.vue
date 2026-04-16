@@ -22,7 +22,8 @@
     </div>
 
     <div v-else class="table-box">
-      <table class="table">
+      <!-- 桌面表格 -->
+      <table class="table desktop-table">
         <thead>
           <tr>
             <th>标题</th>
@@ -63,6 +64,35 @@
           </tr>
         </tbody>
       </table>
+
+      <!-- 移动端卡片 -->
+      <div class="mobile-cards">
+        <div v-for="item in items" :key="item.slug" class="item-card">
+          <div class="card-top">
+            <div class="card-meta">
+              <span class="tag">{{ item.category }}</span>
+              <span class="card-date text-muted text-sm">{{ formatDate(item.date) }}</span>
+            </div>
+            <RouterLink :to="`/admin/items/${item.slug}`" class="card-title">{{ item.title }}</RouterLink>
+          </div>
+          <div class="card-bottom">
+            <select
+              :value="item.status"
+              @change="changeStatus(item, $event.target.value)"
+              class="status-sel"
+              :class="`s-${item.status}`"
+            >
+              <option value="published">已发布</option>
+              <option value="draft">草稿</option>
+              <option value="archived">已归档</option>
+            </select>
+            <div class="card-actions">
+              <RouterLink :to="`/article/${item.slug}`" target="_blank" class="btn btn-ghost btn-sm">预览</RouterLink>
+              <button class="btn btn-danger btn-sm" @click="confirmDelete(item)">删除</button>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="totalPages > 1" class="pagination">
@@ -149,7 +179,7 @@ onMounted(async () => {
   flex-wrap: wrap;
 }
 .page-title { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; flex: 1; }
-.filters { display: flex; gap: 0.6rem; }
+.filters { display: flex; gap: 0.6rem; flex-wrap: wrap; }
 .filter-sel {
   padding: 0.4rem 0.7rem;
   border: 1.5px solid var(--border-mid);
@@ -219,6 +249,34 @@ onMounted(async () => {
 .s-archived { border-color: var(--status-warn); color: var(--status-warn); background: rgba(180,83,9,0.06); }
 .td-date { white-space: nowrap; }
 .td-actions { display: flex; gap: 0.4rem; }
+
+/* 移动端卡片（桌面隐藏） */
+.mobile-cards { display: none; }
+
+@media (max-width: 640px) {
+  .page { padding: 1.25rem 1rem 4rem; }
+  .page-head { margin-bottom: 1rem; padding-bottom: 0.85rem; }
+  .desktop-table { display: none; }
+  .mobile-cards { display: flex; flex-direction: column; }
+  .item-card {
+    padding: 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+  .item-card:last-child { border-bottom: none; }
+  .card-top { margin-bottom: 0.75rem; }
+  .card-meta { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; flex-wrap: wrap; }
+  .card-date { font-size: 0.75rem; }
+  .card-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text);
+    text-decoration: none;
+    display: block;
+    line-height: 1.4;
+  }
+  .card-bottom { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+  .card-actions { display: flex; gap: 0.4rem; }
+}
 
 /* 删除弹窗 */
 .mask {

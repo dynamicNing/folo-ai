@@ -87,5 +87,10 @@ onMounted(async () => {
   padding: 2.5rem;
   box-shadow: var(--shadow);
 }
-@media (max-width: 640px) { .preview-box { padding: 1.25rem; } }
+@media (max-width: 640px) {
+  .page { padding: 1.25rem 1rem 4rem; }
+  .preview-box { padding: 1.25rem; }
+  .page-title { font-size: 1.25rem; }
+  .back-btn { min-height: 44px; display: flex; align-items: center; }
+}
 </style>

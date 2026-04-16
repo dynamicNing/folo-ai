@@ -270,6 +270,28 @@ img { max-width: 100%; }
 }
 
 /* ===== Responsive ===== */
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .container { padding: 0 1.25rem; }
+}
+@media (max-width: 480px) {
   .container { padding: 0 1rem; }
+
+  /* 全局按钮触控目标 ≥ 44px */
+  .btn { min-height: 44px; padding-top: 0.6rem; padding-bottom: 0.6rem; }
+  .btn-sm { min-height: 36px; }
+
+  /* 分页更宽松 */
+  .page-btn { min-height: 44px; }
+
+  /* md 内容在手机上缩小标题 */
+  .md-content h1 { font-size: 1.5rem; }
+  .md-content h2 { font-size: 1.2rem; }
+  .md-content h3 { font-size: 1rem; }
+
+  /* md 表格横向滚动 */
+  .md-content table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* loading/empty 减少垂直 padding */
+  .loading { padding: 3rem 1rem; }
+  .empty   { padding: 3rem 1rem; }
 }

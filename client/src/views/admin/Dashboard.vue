@@ -153,5 +153,11 @@ onMounted(async () => {
 .recent-title { font-weight: 600; font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .recent-date { flex-shrink: 0; }
 
-@media (max-width: 640px) { .stats-row { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px) {
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  .page { padding: 1.25rem 1rem 4rem; }
+  .stat { padding: 1rem; }
+  .stat-num { font-size: 1.75rem; }
+  .recent-row { padding: 0.75rem 1rem; }
+}
 </style>

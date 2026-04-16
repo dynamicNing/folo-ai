@@ -78,6 +78,7 @@ onMounted(async () => {
 .back-link {
   display: inline-flex;
   align-items: center;
+  min-height: 44px;
   font-family: var(--font-display);
   font-size: 0.8rem;
   font-weight: 700;
@@ -85,7 +86,7 @@ onMounted(async () => {
   text-transform: uppercase;
   color: var(--text-muted);
   text-decoration: none;
-  margin-bottom: 2.5rem;
+  margin-bottom: 2rem;
   transition: color 0.15s;
 }
 .back-link:hover { color: var(--accent); }
@@ -96,6 +97,7 @@ onMounted(async () => {
   align-items: center;
   gap: 0.75rem;
   margin-bottom: 1.1rem;
+  flex-wrap: wrap;
 }
 .header-date {
   font-size: 0.8rem;
@@ -105,7 +107,7 @@ onMounted(async () => {
   letter-spacing: 0.02em;
 }
 .article-title {
-  font-size: clamp(2rem, 5vw, 2.9rem);
+  font-size: clamp(1.6rem, 5vw, 2.9rem);
   font-weight: 700;
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -113,7 +115,7 @@ onMounted(async () => {
   margin-bottom: 1.1rem;
 }
 .article-lead {
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   color: var(--text-muted);
   line-height: 1.75;
   margin-bottom: 1rem;
@@ -128,4 +130,12 @@ onMounted(async () => {
 .article-body { margin-bottom: 3rem; }
 
 .article-footer { padding-top: 2rem; border-top: 1px solid var(--border); }
+
+@media (max-width: 480px) {
+  .main { padding: 1.25rem 0 4rem; }
+  .back-link { margin-bottom: 1.25rem; }
+  .article-header { margin-bottom: 1.25rem; }
+  .article-rule { margin-bottom: 1.5rem; }
+  .article-lead { font-size: 0.95rem; }
+}
 </style>

@@ -83,7 +83,7 @@ watch(() => route.params.name, () => { page.value = 1; load(); });
   margin-bottom: 0.5rem;
 }
 .cat-title {
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(1.6rem, 5vw, 3rem);
   font-weight: 700;
   letter-spacing: -0.03em;
   text-transform: capitalize;
@@ -95,4 +95,9 @@ watch(() => route.params.name, () => { page.value = 1; load(); });
   font-family: var(--font-display);
 }
 .feed { display: flex; flex-direction: column; }
+
+@media (max-width: 480px) {
+  .main { padding: 1.5rem 0 4rem; }
+  .cat-header { padding-bottom: 1.25rem; }
+}
 </style>

@@ -54,6 +54,7 @@ function formatDate(d) {
   align-items: center;
   gap: 0.6rem;
   margin-bottom: 0.45rem;
+  flex-wrap: wrap;
 }
 .item-date {
   font-size: 0.75rem;
@@ -63,7 +64,7 @@ function formatDate(d) {
   letter-spacing: 0.02em;
 }
 .item-title {
-  font-size: clamp(1rem, 1.8vw, 1.2rem);
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
   font-weight: 700;
   line-height: 1.3;
   letter-spacing: -0.01em;
@@ -91,5 +92,12 @@ function formatDate(d) {
 .feed-item:hover .item-arrow {
   color: var(--accent);
   transform: translateX(3px);
+}
+
+@media (max-width: 480px) {
+  .feed-item { gap: 0.75rem; padding: 1.1rem 0; }
+  /* 左侧装饰线在手机不显示（container 没有 overflow 余地）*/
+  .feed-item::before { display: none; }
+  .item-summary { display: none; }
 }
 </style>

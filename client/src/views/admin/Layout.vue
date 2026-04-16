@@ -1,23 +1,37 @@
 <template>
   <div class="admin-shell">
-    <aside class="sidebar">
+    <!-- 移动端顶栏 -->
+    <header class="mobile-topbar">
+      <RouterLink to="/" class="mobile-logo">folo<span class="logo-accent">-</span>ai</RouterLink>
+      <button class="mobile-menu-btn" @click="drawerOpen = !drawerOpen" :aria-label="drawerOpen ? '关闭菜单' : '打开菜单'">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <line v-if="!drawerOpen" x1="3" y1="6" x2="21" y2="6"/><line v-if="!drawerOpen" x1="3" y1="12" x2="21" y2="12"/><line v-if="!drawerOpen" x1="3" y1="18" x2="21" y2="18"/>
+          <line v-if="drawerOpen" x1="18" y1="6" x2="6" y2="18"/><line v-if="drawerOpen" x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+    </header>
+
+    <!-- 移动端抽屉遮罩 -->
+    <div v-if="drawerOpen" class="drawer-mask" @click="drawerOpen = false" />
+
+    <aside class="sidebar" :class="{ open: drawerOpen }">
       <div class="sidebar-top">
-        <RouterLink to="/" class="sidebar-logo">
+        <RouterLink to="/" class="sidebar-logo" @click="drawerOpen = false">
           folo<span class="logo-accent">-</span>ai
         </RouterLink>
         <span class="sidebar-badge">Admin</span>
       </div>
 
       <nav class="sidebar-nav">
-        <RouterLink to="/admin" class="nav-item" exact-active-class="active" end>
+        <RouterLink to="/admin" class="nav-item" exact-active-class="active" end @click="drawerOpen = false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
           概览
         </RouterLink>
-        <RouterLink to="/admin/items" class="nav-item" active-class="active">
+        <RouterLink to="/admin/items" class="nav-item" active-class="active" @click="drawerOpen = false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
           内容管理
         </RouterLink>
-        <RouterLink to="/admin/collector" class="nav-item nav-reserved" active-class="active">
+        <RouterLink to="/admin/collector" class="nav-item nav-reserved" active-class="active" @click="drawerOpen = false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
           AI 采集
           <span class="reserved-tag">预留</span>
@@ -39,16 +53,61 @@
 </template>
 
 <script setup>
+import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '../../stores/auth';
 
 const router = useRouter();
 const auth = useAuthStore();
+const drawerOpen = ref(false);
 function logout() { auth.logout(); router.push('/admin/login'); }
 </script>
 
 <style scoped>
 .admin-shell { display: flex; min-height: 100vh; }
+
+/* 移动端顶栏（桌面隐藏） */
+.mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--bg-card);
+  border-bottom: 1.5px solid var(--border);
+  padding: 0 1rem;
+  align-items: center;
+  justify-content: space-between;
+  z-index: 300;
+}
+.mobile-logo {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--text);
+  text-decoration: none;
+}
+.mobile-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border: none;
+  background: none;
+  color: var(--text);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+}
+
+/* 抽屉遮罩 */
+.drawer-mask {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 290;
+  backdrop-filter: blur(1px);
+}
 
 .sidebar {
   width: 210px;
@@ -150,4 +209,21 @@ function logout() { auth.logout(); router.push('/admin/login'); }
 .logout-btn:hover { background: rgba(220,38,38,0.07); color: #dc2626; }
 
 .admin-main { flex: 1; overflow-y: auto; background: var(--bg); }
+
+@media (max-width: 768px) {
+  .mobile-topbar { display: flex; }
+  .drawer-mask { display: block; }
+  .admin-shell { flex-direction: column; padding-top: 52px; }
+  .sidebar {
+    position: fixed;
+    top: 52px; left: 0; bottom: 0;
+    width: 240px;
+    z-index: 295;
+    transform: translateX(-100%);
+    transition: transform 0.25s ease;
+    box-shadow: var(--shadow-md);
+  }
+  .sidebar.open { transform: translateX(0); }
+  .admin-main { padding-top: 0; }
+}
 </style>
