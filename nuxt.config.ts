@@ -8,6 +8,17 @@ export default defineNuxtConfig({
     typeCheck: false,
   },
   modules: ['@pinia/nuxt'],
+  css: ['~/assets/css/main.css'],
+  app: {
+    head: {
+      title: 'folo-ai · Follow One Step',
+      htmlAttrs: { lang: 'zh-CN' },
+      meta: [
+        { charset: 'utf-8' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1.0' },
+      ],
+    },
+  },
   runtimeConfig: {
     jwtSecret: process.env.JWT_SECRET || '',
     adminPasswordHash: process.env.ADMIN_PASSWORD_HASH || '',
@@ -21,13 +32,16 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
-    experimental: {
-      tasks: true,
+    experimental: { tasks: true },
+    devProxy: {
+      '/api': {
+        target: 'http://localhost:3001/api',
+        changeOrigin: true,
+        prependPath: false,
+      },
     },
   },
   vite: {
-    server: {
-      fs: { allow: ['..'] },
-    },
+    server: { fs: { allow: ['..'] } },
   },
 })

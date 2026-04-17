@@ -11,7 +11,7 @@
     "generate": "nuxt generate",
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
-    "start:legacy": "node server.js",
+    "start:legacy": "PORT=3001 node server.js",
     "client:dev:legacy": "vite --config client/vite.config.js",
     "build:legacy": "vite build --config client/vite.config.js",
     "sync": "node scripts/sync.js",
