@@ -10,8 +10,9 @@ const fs = require('fs');
 const path = require('path');
 const { URL } = require('url');
 
-const SOCIAL_DIR = '/root/content-archive/social';
-const COLLECTOR_SCRIPT = '/root/.openclaw/workspace/skills/social-media-collector/scripts/collector.py';
+const CONTENT_ARCHIVE_DIR = process.env.CONTENT_ARCHIVE_DIR || '/root/content-archive';
+const SOCIAL_DIR = path.join(CONTENT_ARCHIVE_DIR, 'social');
+const COLLECTOR_SCRIPT = process.env.COLLECTOR_SCRIPT || '/root/.openclaw/workspace/skills/social-media-collector/scripts/collector.py';
 const STATE_FILE = path.join(SOCIAL_DIR, '.collector-state.json');
 const CUSTOM_FEEDS_FILE = path.join(__dirname, '../../data/custom-feeds.json');
 
@@ -292,7 +293,7 @@ async function collect(platform = 'all') {
       const out = execSync(cmd, { timeout: 120, cwd: path.dirname(COLLECTOR_SCRIPT) }).toString().trim();
 
       // 解析 collector.py 的 JSONL 输出，提取 items
-      const platformDir = `/root/content-archive/social/${target}`;
+      const platformDir = path.join(SOCIAL_DIR, target);
       const latestFile = fs.existsSync(platformDir)
         ? fs.readdirSync(platformDir).filter(f => f.endsWith('.jsonl')).sort().reverse()[0]
         : null;

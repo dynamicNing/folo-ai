@@ -7,7 +7,11 @@
     "start": "node server.js",
     "dev": "node server.js",
     "client:dev": "vite --config client/vite.config.js",
-    "build": "vite build --config client/vite.config.js"
+    "build": "vite build --config client/vite.config.js",
+    "sync": "node scripts/sync.js",
+    "db:reset": "node scripts/reset-db.js",
+    "db:init": "node scripts/reset-db.js --yes && node scripts/sync.js",
+    "archive:pull": "node scripts/pull-archive.js"
   },
   "keywords": [],
   "author": "",
