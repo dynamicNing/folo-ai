@@ -30,8 +30,14 @@ export function useApi() {
       headers: { 'Content-Type': 'application/json', ...(opts.headers as Headers) },
     })
     if (!res.ok) {
-      const err = await res.json().catch(() => ({ error: res.statusText }))
-      throw new Error(err.error || '请求失败')
+      const err = await res.json().catch(() => ({} as Record<string, unknown>))
+      const msg =
+        (err as any).data?.error ||
+        (err as any).error ||
+        (err as any).statusMessage ||
+        (err as any).message ||
+        res.statusText
+      throw new Error(msg || '请求失败')
     }
     return res.json() as Promise<T>
   }

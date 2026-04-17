@@ -33,13 +33,6 @@ export default defineNuxtConfig({
   },
   nitro: {
     experimental: { tasks: true },
-    devProxy: {
-      '/api': {
-        target: 'http://localhost:3001/api',
-        changeOrigin: true,
-        prependPath: false,
-      },
-    },
   },
   vite: {
     server: { fs: { allow: ['..'] } },
