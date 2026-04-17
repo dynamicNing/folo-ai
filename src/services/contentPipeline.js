@@ -6,7 +6,7 @@ marked.setOptions({ breaks: true, gfm: true });
 
 const GITHUB_OWNER = 'dynamicNing';
 const GITHUB_REPO = 'content-archive';
-const GITHUB_BRANCH = 'main';
+const GITHUB_BRANCH = 'master';
 const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 
@@ -36,7 +36,7 @@ async function fetchAllMdFiles() {
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`);
   const { tree } = await res.json();
   return tree
-    .filter(f => f.type === 'blob' && f.path.endsWith('.md') && !f.path.startsWith('_'))
+    .filter(f => f.type === 'blob' && f.path.endsWith('.md') && !f.path.startsWith('_') && f.path.toLowerCase() !== 'readme.md')
     .map(f => ({ path: f.path, sha: f.sha }));
 }
 
@@ -65,11 +65,15 @@ function summaryFromBody(body) {
 
 function categoryFromPath(repoPath) {
   const parts = repoPath.split('/');
-  return parts.length > 1 ? parts[0] : 'uncategorized';
+  // social/weibo/... → social, ai-digest/... → ai-digest, root file → uncategorized
+  if (parts.length === 1) return 'uncategorized';
+  if (parts[0] === 'social') return parts.slice(0, 2).join('/'); // e.g. social/weibo
+  return parts[0];
 }
 
 function slugFromPath(repoPath) {
-  return repoPath.replace(/^.*\//, '').replace(/\.md$/, '');
+  // Use full path (without .md) to avoid slug collisions across categories
+  return repoPath.replace(/\.md$/, '');
 }
 
 // ── MiniMax AI ──────────────────────────────────────────────────────────────
@@ -187,7 +191,7 @@ async function removeFile(repoPath) {
 // ── Public API ───────────────────────────────────────────────────────────────
 
 async function processChanges({ added = [], modified = [], removed = [] }) {
-  const mdFiles = [...added, ...modified].filter(p => p.endsWith('.md') && !p.startsWith('_'));
+  const mdFiles = [...added, ...modified].filter(p => p.endsWith('.md') && !p.startsWith('_') && p.toLowerCase() !== 'readme.md');
   const removedMd = removed.filter(p => p.endsWith('.md'));
 
   for (const repoPath of removedMd) {
