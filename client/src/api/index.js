@@ -44,4 +44,18 @@ export const api = {
       headers,
       body: JSON.stringify({ platform }),
     }),
+  // 自定义 RSS 源
+  getCustomFeeds: () => request('/social/feeds'),
+  addCustomFeed: (name, url, headers) =>
+    request('/social/feeds', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ name, url }),
+    }),
+  removeCustomFeed: (id, headers) =>
+    request(`/social/feeds/${id}`, { method: 'DELETE', headers }),
+  toggleCustomFeed: (id, headers) =>
+    request(`/social/feeds/${id}/toggle`, { method: 'PATCH', headers }),
+  collectCustomFeeds: (headers) =>
+    request('/social/collect/custom', { method: 'POST', headers }),
 };
