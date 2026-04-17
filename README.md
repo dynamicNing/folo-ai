@@ -142,4 +142,4 @@ location / {
 - 首次部署跑一次 `npm run db:init` 物化 SQLite
 - Webhook secret 建议设 `GITHUB_WEBHOOK_SECRET` 强校验
 
-更多本地调试细节见 [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md)。
+更多本地调试细节见 [`docs/LOCAL_DEV.md`](docs/LOCAL_DEV.md)；部署与运维见 [`docs/DEPLOY.md`](docs/DEPLOY.md)。
