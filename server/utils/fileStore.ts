@@ -1,5 +1,5 @@
 import { db } from './db'
-import type { Article, ArticleStatus, ItemListResponse } from '~/types/article'
+import type { Article, ArticleStatus, ItemListResponse } from '../../types/article'
 
 interface ArticleRow {
   slug: string

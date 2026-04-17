@@ -4,17 +4,17 @@ import https from 'node:https'
 import fs from 'node:fs'
 import path from 'node:path'
 import { URL } from 'node:url'
-import type { CustomFeed, SocialItem, SocialItemListResponse, SocialStatus } from '~/types/article'
+import type { CustomFeed, SocialItem, SocialItemListResponse, SocialStatus } from '../../types/article'
 
 function contentArchiveDir(): string {
-  return useRuntimeConfig().contentArchiveDir || '/root/content-archive'
+  return process.env.CONTENT_ARCHIVE_DIR || '/root/content-archive'
 }
 
 function socialDir(): string { return path.join(contentArchiveDir(), 'social') }
 function stateFile(): string { return path.join(socialDir(), '.collector-state.json') }
 function customFeedsFile(): string { return path.resolve(process.cwd(), 'data/custom-feeds.json') }
 function collectorScript(): string {
-  return useRuntimeConfig().collectorScript || '/root/.openclaw/workspace/skills/social-media-collector/scripts/collector.py'
+  return process.env.COLLECTOR_SCRIPT || '/root/.openclaw/workspace/skills/social-media-collector/scripts/collector.py'
 }
 
 const PLATFORM_META: Record<string, { emoji: string; name: string }> = {

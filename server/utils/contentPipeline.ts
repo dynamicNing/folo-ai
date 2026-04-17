@@ -18,7 +18,7 @@ function githubHeaders(): Record<string, string> {
     'User-Agent': 'folo-ai',
     Accept: 'application/vnd.github+json',
   }
-  const token = useRuntimeConfig().githubToken
+  const token = process.env.GITHUB_TOKEN
   if (token) h.Authorization = `Bearer ${token}`
   return h
 }
@@ -78,7 +78,7 @@ function slugFromPath(repoPath: string): string {
 }
 
 async function aiSummarize(body: string, missingFields: string[]): Promise<Record<string, unknown>> {
-  const apiKey = useRuntimeConfig().minimaxApiKey
+  const apiKey = process.env.MINIMAX_API_KEY
   if (!apiKey) {
     console.warn('[pipeline] MINIMAX_API_KEY not set, skipping AI')
     return {}
