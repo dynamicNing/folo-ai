@@ -36,7 +36,7 @@ async function fetchAllMdFiles() {
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`);
   const { tree } = await res.json();
   return tree
-    .filter(f => f.type === 'blob' && f.path.endsWith('.md') && !f.path.startsWith('_'))
+    .filter(f => f.type === 'blob' && f.path.endsWith('.md') && !f.path.startsWith('_') && f.path.toLowerCase() !== 'readme.md')
     .map(f => ({ path: f.path, sha: f.sha }));
 }
 
@@ -191,7 +191,7 @@ async function removeFile(repoPath) {
 // ── Public API ───────────────────────────────────────────────────────────────
 
 async function processChanges({ added = [], modified = [], removed = [] }) {
-  const mdFiles = [...added, ...modified].filter(p => p.endsWith('.md') && !p.startsWith('_'));
+  const mdFiles = [...added, ...modified].filter(p => p.endsWith('.md') && !p.startsWith('_') && p.toLowerCase() !== 'readme.md');
   const removedMd = removed.filter(p => p.endsWith('.md'));
 
   for (const repoPath of removedMd) {
