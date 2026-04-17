@@ -32,4 +32,16 @@ export const api = {
       method: 'POST',
       body: JSON.stringify({ password }),
     }),
+  // 社交媒体
+  getSocialStatus: () => request('/social/status'),
+  getSocialItems: (params = {}) => {
+    const q = new URLSearchParams(params).toString();
+    return request(`/social/items${q ? '?' + q : ''}`);
+  },
+  triggerCollect: (platform, headers) =>
+    request('/social/collect', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ platform }),
+    }),
 };
