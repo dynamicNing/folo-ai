@@ -9,3 +9,4 @@ content-archive/
 .nitro/
 .cache/
 dist/
+.data/

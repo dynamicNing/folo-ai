@@ -7,7 +7,7 @@ export default defineNuxtConfig({
     strict: true,
     typeCheck: false,
   },
-  modules: ['@pinia/nuxt'],
+  modules: ['@pinia/nuxt', '@nuxt/content'],
   css: ['~/assets/css/main.css'],
   app: {
     head: {

@@ -2,7 +2,7 @@
   <div class="container" style="max-width:760px;padding-top:2rem;padding-bottom:5rem">
     <div v-if="pending" class="loading"><div class="spinner" />加载中...</div>
 
-    <div v-else-if="!item" class="empty">
+    <div v-else-if="!meta" class="empty">
       <div class="empty-icon">🔍</div>
       <p>文章不存在</p>
       <NuxtLink to="/" class="btn btn-ghost" style="margin-top:1.5rem">← 返回首页</NuxtLink>
@@ -13,19 +13,20 @@
 
       <header class="article-header">
         <div class="header-meta">
-          <NuxtLink :to="`/category/${item.category}`" class="tag">{{ item.category }}</NuxtLink>
-          <time class="header-date">{{ formatDate(item.date) }}</time>
+          <NuxtLink :to="`/category/${meta.category}`" class="tag">{{ meta.category }}</NuxtLink>
+          <time class="header-date">{{ formatDate(meta.date) }}</time>
         </div>
-        <h1 class="article-title">{{ item.title }}</h1>
-        <p v-if="item.summary" class="article-lead">{{ item.summary }}</p>
-        <div v-if="item.tags.length" class="article-tags">
-          <span v-for="tag in item.tags" :key="tag" class="tag">{{ tag }}</span>
+        <h1 class="article-title">{{ meta.title }}</h1>
+        <p v-if="meta.summary" class="article-lead">{{ meta.summary }}</p>
+        <div v-if="meta.tags.length" class="article-tags">
+          <span v-for="tag in meta.tags" :key="tag" class="tag">{{ tag }}</span>
         </div>
       </header>
 
       <div class="article-rule" />
       <article class="article-body">
-        <div class="md-content" v-html="item.content" />
+        <ContentRenderer v-if="doc" :value="doc" class="md-content" />
+        <div v-else class="md-content" v-html="meta.content" />
       </article>
 
       <div class="article-footer">
@@ -41,7 +42,8 @@ import type { Article } from '~/types/article'
 
 const route = useRoute()
 const api = useApi()
-const item = ref<Article | null>(null)
+const meta = ref<Article | null>(null)
+const doc = ref<unknown>(null)
 const pending = ref(true)
 
 function formatDate(d: string): string {
@@ -50,9 +52,17 @@ function formatDate(d: string): string {
 }
 
 onMounted(async () => {
-  try { item.value = await api.getItem(route.params.slug as string) }
-  catch { item.value = null }
-  finally { pending.value = false }
+  const slug = route.params.slug as string
+  try {
+    const [m, d] = await Promise.all([
+      api.getItem(slug).catch(() => null),
+      queryCollection('archive').path(`/${slug}`).first().catch(() => null),
+    ])
+    meta.value = m
+    doc.value = d
+  } finally {
+    pending.value = false
+  }
 })
 </script>
 

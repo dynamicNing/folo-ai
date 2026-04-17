@@ -20,6 +20,8 @@
     "archive:pull": "node scripts/pull-archive.js"
   },
   "dependencies": {
+    "@nuxt/content": "^3.13.0",
+    "@pinia/nuxt": "^0.5.5",
     "bcryptjs": "^3.0.3",
     "better-sqlite3": "^12.9.0",
     "cors": "^2.8.6",
@@ -30,10 +32,9 @@
     "jsonwebtoken": "^9.0.3",
     "marked": "^18.0.0",
     "nuxt": "^3.14.0",
-    "vue": "^3.5.32",
-    "vue-router": "^4.5.0",
     "pinia": "^2.2.0",
-    "@pinia/nuxt": "^0.5.5"
+    "vue": "^3.5.32",
+    "vue-router": "^4.5.0"
   },
   "devDependencies": {
     "@types/bcryptjs": "^2.4.6",
