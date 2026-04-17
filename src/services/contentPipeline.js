@@ -6,7 +6,7 @@ marked.setOptions({ breaks: true, gfm: true });
 
 const GITHUB_OWNER = 'dynamicNing';
 const GITHUB_REPO = 'content-archive';
-const GITHUB_BRANCH = 'main';
+const GITHUB_BRANCH = 'master';
 const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`;
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
 
@@ -65,11 +65,15 @@ function summaryFromBody(body) {
 
 function categoryFromPath(repoPath) {
   const parts = repoPath.split('/');
-  return parts.length > 1 ? parts[0] : 'uncategorized';
+  // social/weibo/... → social, ai-digest/... → ai-digest, root file → uncategorized
+  if (parts.length === 1) return 'uncategorized';
+  if (parts[0] === 'social') return parts.slice(0, 2).join('/'); // e.g. social/weibo
+  return parts[0];
 }
 
 function slugFromPath(repoPath) {
-  return repoPath.replace(/^.*\//, '').replace(/\.md$/, '');
+  // Use full path (without .md) to avoid slug collisions across categories
+  return repoPath.replace(/\.md$/, '');
 }
 
 // ── MiniMax AI ──────────────────────────────────────────────────────────────
