@@ -1,50 +1,24 @@
-const fs = require('fs');
-const path = require('path');
-const matter = require('gray-matter');
-const { parse, parseMeta } = require('./mdParser');
-
-const CONTENT_DIR = path.join(__dirname, '../../content');
-const TRASH_DIR = path.join(CONTENT_DIR, '_trash');
-
-function ensureTrash() {
-  if (!fs.existsSync(TRASH_DIR)) fs.mkdirSync(TRASH_DIR, { recursive: true });
-}
-
-function getAllFiles(dir, files = []) {
-  const entries = fs.readdirSync(dir, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.name.startsWith('_')) continue; // skip _trash etc
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      getAllFiles(full, files);
-    } else if (entry.name.endsWith('.md')) {
-      files.push(full);
-    }
-  }
-  return files;
-}
+const db = require('./db');
 
 function list(filters = {}) {
-  const files = getAllFiles(CONTENT_DIR);
-  let items = files.map(f => parseMeta(f, CONTENT_DIR));
+  let sql = 'SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE 1=1';
+  const params = [];
 
-  if (filters.category) {
-    items = items.filter(i => i.category === filters.category);
-  }
+  if (filters.status) { sql += ' AND status = ?'; params.push(filters.status); }
+  if (filters.category) { sql += ' AND category = ?'; params.push(filters.category); }
+  if (filters.tag) { sql += ' AND json_each.value = ?'; /* handled below */ }
+
+  sql += ' ORDER BY date DESC, updated_at DESC';
+
+  let items = db.prepare(sql).all(...params);
+
+  // Parse tags JSON and filter by tag if needed
+  items = items.map(r => ({ ...r, tags: JSON.parse(r.tags || '[]') }));
+
   if (filters.tag) {
     items = items.filter(i => i.tags.includes(filters.tag));
   }
-  if (filters.status) {
-    items = items.filter(i => i.status === filters.status);
-  }
 
-  items.sort((a, b) => {
-    const da = a.date ? new Date(a.date) : 0;
-    const db = b.date ? new Date(b.date) : 0;
-    return db - da;
-  });
-
-  // pagination
   const page = Math.max(1, parseInt(filters.page) || 1);
   const pageSize = parseInt(filters.pageSize) || 20;
   const total = items.length;
@@ -53,49 +27,28 @@ function list(filters = {}) {
   return { data, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
 }
 
-function findFile(slug) {
-  const files = getAllFiles(CONTENT_DIR);
-  return files.find(f => path.basename(f, '.md') === slug) || null;
-}
-
 function get(slug) {
-  const filePath = findFile(slug);
-  if (!filePath) return null;
-  return parse(filePath, CONTENT_DIR);
+  const row = db.prepare('SELECT * FROM articles WHERE slug = ?').get(slug);
+  if (!row) return null;
+  return { ...row, tags: JSON.parse(row.tags || '[]'), ai_fields: JSON.parse(row.ai_fields || '[]') };
 }
 
 function updateStatus(slug, status) {
   const VALID = ['draft', 'published', 'archived'];
   if (!VALID.includes(status)) throw new Error('Invalid status');
-
-  const filePath = findFile(slug);
-  if (!filePath) return false;
-
-  const raw = fs.readFileSync(filePath, 'utf-8');
-  const parsed = matter(raw);
-  parsed.data.status = status;
-  const updated = matter.stringify(parsed.content, parsed.data);
-  fs.writeFileSync(filePath, updated, 'utf-8');
-  return true;
+  const result = db.prepare('UPDATE articles SET status = ?, updated_at = ? WHERE slug = ?')
+    .run(status, new Date().toISOString(), slug);
+  return result.changes > 0;
 }
 
 function remove(slug) {
-  ensureTrash();
-  const filePath = findFile(slug);
-  if (!filePath) return false;
-  const dest = path.join(TRASH_DIR, path.basename(filePath));
-  fs.renameSync(filePath, dest);
-  return true;
+  const result = db.prepare('DELETE FROM articles WHERE slug = ?').run(slug);
+  return result.changes > 0;
 }
 
 function categories() {
-  const files = getAllFiles(CONTENT_DIR);
-  const cats = new Set(files.map(f => {
-    const rel = path.relative(CONTENT_DIR, f);
-    const parts = rel.split(path.sep);
-    return parts.length > 1 ? parts[0] : 'uncategorized';
-  }));
-  return Array.from(cats);
+  const rows = db.prepare('SELECT DISTINCT category FROM articles').all();
+  return rows.map(r => r.category).filter(Boolean);
 }
 
 module.exports = { list, get, updateStatus, remove, categories };
