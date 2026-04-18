@@ -41,12 +41,18 @@ async function fetchAllMdFiles(): Promise<GithubFile[]> {
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`)
   const data = await res.json() as { tree: Array<{ type: string; path: string; sha: string }> }
   return data.tree
-    .filter(f => f.type === 'blob' && f.path.endsWith('.md') && !f.path.startsWith('_') && f.path.toLowerCase() !== 'readme.md')
+    .filter(f =>
+      f.type === 'blob'
+      && f.path.endsWith('.md')
+      && !f.path.split('/').some(seg => seg.startsWith('_'))
+      && !/(^|\/)readme\.md$/i.test(f.path)
+    )
     .map(f => ({ path: f.path, sha: f.sha }))
 }
 
 function dateFromSlug(slug: string): string | null {
-  const m = slug.match(/^(\d{4}-\d{2}-\d{2})/)
+  const base = slug.split('/').pop() || slug
+  const m = base.match(/^(\d{4}-\d{2}-\d{2})/)
   return m ? m[1] : null
 }
 
