@@ -183,6 +183,9 @@ img { max-width: 100%; }
   color: var(--text);
 }
 .md-content h1 { font-size: 1.9rem; }
+/* 正文首个 h1 通常和 article-header 标题重复，隐藏之 */
+.md-content > h1:first-child,
+.md-content > :first-child > h1:first-child { display: none; }
 .md-content h2 {
   font-size: 1.35rem;
   padding-bottom: 0.4em;
