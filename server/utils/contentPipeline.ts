@@ -36,17 +36,18 @@ async function fetchFileMeta(repoPath: string): Promise<{ sha: string } | null> 
   return { sha: data.sha }
 }
 
+function isIndexableMd(p: string): boolean {
+  return p.endsWith('.md')
+    && !p.split('/').some(seg => seg.startsWith('_'))
+    && !/(^|\/)readme\.md$/i.test(p)
+}
+
 async function fetchAllMdFiles(): Promise<GithubFile[]> {
   const res = await fetch(`${GITHUB_API}/git/trees/${GITHUB_BRANCH}?recursive=1`, { headers: githubHeaders() })
   if (!res.ok) throw new Error(`GitHub tree fetch failed: ${res.status}`)
   const data = await res.json() as { tree: Array<{ type: string; path: string; sha: string }> }
   return data.tree
-    .filter(f =>
-      f.type === 'blob'
-      && f.path.endsWith('.md')
-      && !f.path.split('/').some(seg => seg.startsWith('_'))
-      && !/(^|\/)readme\.md$/i.test(f.path)
-    )
+    .filter(f => f.type === 'blob' && isIndexableMd(f.path))
     .map(f => ({ path: f.path, sha: f.sha }))
 }
 
@@ -191,9 +192,7 @@ async function removeFile(repoPath: string): Promise<void> {
 
 export async function processChanges(changes: ChangeSet): Promise<void> {
   const { added = [], modified = [], removed = [] } = changes
-  const mdFiles = [...added, ...modified].filter(
-    p => p.endsWith('.md') && !p.startsWith('_') && p.toLowerCase() !== 'readme.md'
-  )
+  const mdFiles = [...added, ...modified].filter(isIndexableMd)
   const removedMd = removed.filter(p => p.endsWith('.md'))
 
   for (const repoPath of removedMd) {
