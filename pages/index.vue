@@ -1,5 +1,25 @@
 <template>
-  <div class="container" style="padding-top:2.5rem;padding-bottom:5rem">
+  <div class="container" style="padding-top:1.5rem;padding-bottom:5rem">
+    <!-- 类型筛选 -->
+    <div class="type-filter" role="tablist">
+      <button
+        class="type-pill"
+        :class="{ active: selected === '' }"
+        role="tab"
+        :aria-selected="selected === ''"
+        @click="select('')"
+      >全部</button>
+      <button
+        v-for="c in categories"
+        :key="c"
+        class="type-pill"
+        :class="{ active: selected === c }"
+        role="tab"
+        :aria-selected="selected === c"
+        @click="select(c)"
+      >{{ c }}</button>
+    </div>
+
     <div v-if="pending" class="loading"><div class="spinner" />加载中...</div>
 
     <div v-else-if="!items.length" class="empty">
@@ -50,6 +70,8 @@ const total = ref(0)
 const page = ref(1)
 const totalPages = ref(1)
 const pending = ref(true)
+const categories = ref<string[]>([])
+const selected = ref<string>('')
 
 function formatDate(d: string): string {
   if (!d) return ''
@@ -59,7 +81,11 @@ function formatDate(d: string): string {
 async function load() {
   pending.value = true
   try {
-    const res = await api.getItems({ page: page.value, status: 'published' })
+    const res = await api.getItems({
+      page: page.value,
+      status: 'published',
+      category: selected.value || undefined,
+    })
     items.value = res.data
     total.value = res.total
     totalPages.value = res.totalPages
@@ -67,10 +93,50 @@ async function load() {
 }
 
 function go(p: number) { page.value = p; load() }
-onMounted(load)
+
+function select(c: string) {
+  if (selected.value === c) return
+  selected.value = c
+  page.value = 1
+  load()
+}
+
+onMounted(async () => {
+  try { categories.value = await api.getCategories() } catch {}
+  await load()
+})
 </script>
 
 <style scoped>
+.type-filter {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding: 0.25rem 0 1.5rem;
+  border-bottom: 1.5px solid var(--border);
+  margin-bottom: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.type-pill {
+  padding: 0.4rem 0.95rem;
+  border-radius: 999px;
+  border: 1.5px solid var(--border-mid);
+  background: transparent;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.15s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.type-pill:hover { color: var(--text); border-color: var(--text-muted); }
+.type-pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
 .hero { display: block; padding: 2.5rem 0; border-top: 3px solid var(--accent); text-decoration: none; color: inherit; transition: opacity 0.15s; }
 .hero:hover { opacity: 0.92; color: inherit; }
 .hero-meta { display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.1rem; }
@@ -91,5 +157,6 @@ onMounted(load)
   .hero { padding: 1.5rem 0; }
   .hero-summary { font-size: 0.95rem; }
   .section-header { padding: 1.25rem 0 0.75rem; }
+  .type-filter { padding-bottom: 1rem; }
 }
 </style>
