@@ -13,7 +13,7 @@
 
       <header class="article-header">
         <div class="header-meta">
-          <NuxtLink :to="`/category/${meta.category}`" class="tag">{{ meta.category }}</NuxtLink>
+          <span class="tag">{{ meta.category }}</span>
           <time class="header-date">{{ formatDate(meta.date) }}</time>
         </div>
         <h1 class="article-title">{{ meta.title }}</h1>
@@ -46,13 +46,17 @@ const meta = ref<Article | null>(null)
 const doc = ref<unknown>(null)
 const pending = ref(true)
 
+function joinSlug(p: string | string[]): string {
+  return Array.isArray(p) ? p.join('/') : p
+}
+
 function formatDate(d: string): string {
   if (!d) return ''
   return new Date(d).toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' })
 }
 
 onMounted(async () => {
-  const slug = route.params.slug as string
+  const slug = joinSlug(route.params.slug as string | string[])
   try {
     const [m, d] = await Promise.all([
       api.getItem(slug).catch(() => null),

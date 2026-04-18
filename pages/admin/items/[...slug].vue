@@ -37,6 +37,10 @@ const api = useApi()
 const item = ref<Article | null>(null)
 const pending = ref(true)
 
+function joinSlug(p: string | string[]): string {
+  return Array.isArray(p) ? p.join('/') : p
+}
+
 function statusLabel(s: ArticleStatus): string {
   return ({ published: '已发布', draft: '草稿', archived: '已归档' } as const)[s] || s
 }
@@ -47,7 +51,8 @@ function formatDate(d: string): string {
 }
 
 onMounted(async () => {
-  try { item.value = await api.getItem(route.params.slug as string, auth.authHeader()) }
+  const slug = joinSlug(route.params.slug as string | string[])
+  try { item.value = await api.getItem(slug, auth.authHeader()) }
   catch { item.value = null }
   finally { pending.value = false }
 })

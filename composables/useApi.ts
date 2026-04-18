@@ -49,7 +49,7 @@ export function useApi() {
       request<Article>(`/items/${slug}`, { headers }),
     getCategories: () => request<string[]>('/items/categories'),
     updateStatus: (slug: string, status: string, headers: Headers) =>
-      request<{ ok: true }>(`/items/${slug}/status`, {
+      request<{ ok: true }>(`/items/${slug}`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ status }),
