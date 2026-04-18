@@ -190,38 +190,68 @@ async function removeFile(repoPath: string): Promise<void> {
   console.log(`[pipeline] removed: ${slug}`)
 }
 
-export async function processChanges(changes: ChangeSet): Promise<void> {
+export interface ProcessChangesResult {
+  processed: number
+  failed: number
+  removed: number
+  errors: Array<{ path: string; error: string }>
+}
+
+export async function processChanges(changes: ChangeSet): Promise<ProcessChangesResult> {
   const { added = [], modified = [], removed = [] } = changes
   const mdFiles = [...added, ...modified].filter(isIndexableMd)
   const removedMd = removed.filter(p => p.endsWith('.md'))
+  const errors: Array<{ path: string; error: string }> = []
+  let processed = 0
+  let removedCount = 0
 
   for (const repoPath of removedMd) {
-    await removeFile(repoPath)
+    try {
+      await removeFile(repoPath)
+      removedCount++
+    } catch (err) {
+      errors.push({ path: repoPath, error: (err as Error).message })
+    }
   }
 
   for (const repoPath of mdFiles) {
     try {
       const meta = await fetchFileMeta(repoPath)
       await processFile({ path: repoPath, sha: meta?.sha || '' })
+      processed++
     } catch (err) {
-      console.error(`[pipeline] failed: ${repoPath}`, (err as Error).message)
+      const msg = (err as Error).message
+      console.error(`[pipeline] failed: ${repoPath}`, msg)
+      errors.push({ path: repoPath, error: msg })
     }
   }
+
+  return { processed, failed: errors.length, removed: removedCount, errors }
 }
 
-export async function syncAll(): Promise<{ total: number; processed: number }> {
+export interface SyncAllResult {
+  total: number
+  processed: number
+  failed: number
+  errors: Array<{ path: string; error: string }>
+}
+
+export async function syncAll(): Promise<SyncAllResult> {
   console.log('[pipeline] starting full sync...')
   const files = await fetchAllMdFiles()
   console.log(`[pipeline] found ${files.length} md files`)
   let done = 0
+  const errors: Array<{ path: string; error: string }> = []
   for (const file of files) {
     try {
       await processFile(file)
       done++
     } catch (err) {
-      console.error(`[pipeline] syncAll failed: ${file.path}`, (err as Error).message)
+      const msg = (err as Error).message
+      console.error(`[pipeline] syncAll failed: ${file.path}`, msg)
+      errors.push({ path: file.path, error: msg })
     }
   }
   console.log(`[pipeline] full sync done: ${done}/${files.length}`)
-  return { total: files.length, processed: done }
+  return { total: files.length, processed: done, failed: errors.length, errors }
 }

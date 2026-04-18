@@ -1,17 +1,39 @@
 import crypto from 'node:crypto'
 import { processChanges } from '~/server/utils/contentPipeline'
 import { apiError } from '~/server/utils/auth'
+import { startSyncLog, finishSyncLog } from '~/server/utils/syncLog'
+
+interface Job { added: string[]; modified: string[]; removed: string[] }
 
 let processing = false
-const queue: Array<{ added: string[]; modified: string[]; removed: string[] }> = []
+const queue: Job[] = []
 
 async function drainQueue() {
   if (processing || queue.length === 0) return
   processing = true
   while (queue.length > 0) {
     const job = queue.shift()!
-    try { await processChanges(job) }
-    catch (err) { console.error('[webhook] job failed:', (err as Error).message) }
+    const logId = startSyncLog({
+      source: 'webhook',
+      added: job.added.length,
+      modified: job.modified.length,
+      removed: job.removed.length,
+    })
+    try {
+      const result = await processChanges(job)
+      finishSyncLog(logId, {
+        status: result.failed > 0 ? 'partial' : 'success',
+        processed: result.processed,
+        failed: result.failed,
+        removed: result.removed,
+        message: result.failed > 0 ? `${result.failed} 个文件失败` : null as unknown as string,
+        detail: { errors: result.errors },
+      })
+    } catch (err) {
+      const msg = (err as Error).message
+      console.error('[webhook] job failed:', msg)
+      finishSyncLog(logId, { status: 'failed', message: msg })
+    }
   }
   processing = false
 }

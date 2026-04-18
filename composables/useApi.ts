@@ -7,6 +7,8 @@ import type {
   LoginResponse,
   SocialItemListResponse,
   SocialStatus,
+  SyncLog,
+  SyncRunResult,
 } from '~/types/article'
 
 type Headers = Record<string, string>
@@ -85,5 +87,11 @@ export function useApi() {
       request<CustomFeed>(`/social/feeds/${id}/toggle`, { method: 'PATCH', headers }),
     collectCustomFeeds: (headers: Headers) =>
       request<CollectResult>('/social/collect/custom', { method: 'POST', headers }),
+
+    // Sync
+    runSyncAll: (headers: Headers) =>
+      request<SyncRunResult>('/webhook/sync-all', { method: 'POST', headers, body: JSON.stringify({ source: 'manual' }) }),
+    getSyncLogs: (headers: Headers, limit = 50) =>
+      request<{ data: SyncLog[] }>(`/sync/logs?limit=${limit}`, { headers }),
   }
 }

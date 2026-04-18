@@ -31,7 +31,11 @@
         </NuxtLink>
         <NuxtLink to="/admin/collector" class="nav-item" active-class="active" @click="drawerOpen = false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
-          社交���集
+          社交采集
+        </NuxtLink>
+        <NuxtLink to="/admin/sync" class="nav-item" active-class="active" @click="drawerOpen = false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          内容同步
         </NuxtLink>
       </nav>
 

@@ -68,3 +68,32 @@ export interface CustomFeed {
   enabled: boolean
   createdAt: string
 }
+
+export type SyncSource = 'manual' | 'webhook' | 'cli'
+export type SyncLogStatus = 'success' | 'failed' | 'partial' | 'running'
+
+export interface SyncLog {
+  id: number
+  source: SyncSource
+  status: SyncLogStatus
+  started_at: string
+  finished_at: string | null
+  duration_ms: number | null
+  added: number
+  modified: number
+  removed: number
+  total: number
+  processed: number
+  failed: number
+  message: string | null
+  detail: string | null
+}
+
+export interface SyncRunResult {
+  ok: true
+  logId: number
+  total: number
+  processed: number
+  failed: number
+  errors: Array<{ path: string; error: string }>
+}
