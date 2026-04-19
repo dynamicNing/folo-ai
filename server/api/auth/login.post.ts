@@ -13,5 +13,15 @@ export default defineEventHandler(async event => {
   if (!ok) apiError(401, '密码错误')
 
   const token = jwt.sign({ role: 'admin' }, config.jwtSecret, { expiresIn: '7d' })
+
+  // 设置 httpOnly cookie，7天有效
+  setCookie(event, 'auth_token', token, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 60 * 60 * 24 * 7, // 7天
+    path: '/',
+  })
+
   return { token }
 })
