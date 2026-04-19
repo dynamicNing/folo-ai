@@ -7,7 +7,6 @@ marked.setOptions({ breaks: true, gfm: true })
 const GITHUB_OWNER = 'dynamicNing'
 const GITHUB_REPO = 'content-archive'
 const GITHUB_BRANCH = 'master'
-const GITHUB_RAW = `https://raw.githubusercontent.com/${GITHUB_OWNER}/${GITHUB_REPO}/${GITHUB_BRANCH}`
 const GITHUB_API = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`
 
 interface GithubFile { path: string; sha: string }
@@ -24,7 +23,8 @@ function githubHeaders(): Record<string, string> {
 }
 
 async function fetchRawContent(repoPath: string): Promise<string> {
-  const res = await fetch(`${GITHUB_RAW}/${repoPath}`, { headers: githubHeaders() })
+  const url = `${GITHUB_API}/contents/${repoPath}?ref=${GITHUB_BRANCH}`
+  const res = await fetch(url, { headers: { ...githubHeaders(), Accept: 'application/vnd.github.raw' } })
   if (!res.ok) throw new Error(`GitHub raw fetch failed: ${res.status} ${repoPath}`)
   return res.text()
 }
