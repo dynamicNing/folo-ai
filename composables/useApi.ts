@@ -1,5 +1,6 @@
 import type {
   Article,
+  AuthMeResponse,
   CollectResult,
   CustomFeed,
   ItemListParams,
@@ -63,6 +64,12 @@ export function useApi() {
         method: 'POST',
         body: JSON.stringify({ password }),
       }),
+    logout: () =>
+      request<{ ok: true }>('/auth/logout', {
+        method: 'POST',
+      }),
+    getMe: () =>
+      request<AuthMeResponse>('/auth/me'),
 
     // Social
     getSocialStatus: () => request<SocialStatus>('/social/status'),

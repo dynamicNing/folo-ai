@@ -23,5 +23,5 @@ export default defineEventHandler(async event => {
     path: '/',
   })
 
-  return { token }
+  return { ok: true as const }
 })

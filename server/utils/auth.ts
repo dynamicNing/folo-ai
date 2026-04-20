@@ -1,26 +1,37 @@
 import jwt from 'jsonwebtoken'
-import type { H3Event } from 'h3'
+import { getCookie, type H3Event } from 'h3'
 
-export function requireAuth(event: H3Event): { role: string } {
+function getToken(event: H3Event): string | null {
   const header = getHeader(event, 'authorization') || ''
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null
-  if (!token) {
-    throw createError({ statusCode: 401, statusMessage: '未登录', data: { error: '未登录' } })
-  }
+  if (header.startsWith('Bearer ')) return header.slice(7)
+  return getCookie(event, 'auth_token') || null
+}
+
+function verifyToken(token: string): { role: string } {
   const config = useRuntimeConfig()
+  return jwt.verify(token, config.jwtSecret) as { role: string }
+}
+
+export function getAuthPayload(event: H3Event): { role: string } | null {
+  const token = getToken(event)
+  if (!token) return null
   try {
-    return jwt.verify(token, config.jwtSecret) as { role: string }
+    return verifyToken(token)
   } catch {
-    throw createError({
-      statusCode: 401,
-      statusMessage: 'Token 无效或已过期',
-      data: { error: 'Token 无效或已过期' },
-    })
+    return null
   }
 }
 
-export function hasAuthHeader(event: H3Event): boolean {
-  return !!getHeader(event, 'authorization')
+export function requireAuth(event: H3Event): { role: string } {
+  const payload = getAuthPayload(event)
+  if (!payload) {
+    throw createError({ statusCode: 401, statusMessage: '未登录', data: { error: '未登录' } })
+  }
+  return payload
+}
+
+export function isAuthenticated(event: H3Event): boolean {
+  return !!getAuthPayload(event)
 }
 
 export function apiError(statusCode: number, message: string): never {

@@ -60,7 +60,10 @@ import { useAuthStore } from '~/stores/auth'
 const router = useRouter()
 const auth = useAuthStore()
 const drawerOpen = ref(false)
-function logout() { auth.logout(); router.push('/admin/login') }
+async function logout() {
+  await auth.logout()
+  router.push('/admin/login')
+}
 </script>
 
 <style scoped>

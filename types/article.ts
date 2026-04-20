@@ -30,7 +30,12 @@ export interface ItemListParams {
 }
 
 export interface LoginResponse {
-  token: string
+  ok: true
+}
+
+export interface AuthMeResponse {
+  authenticated: boolean
+  role?: string
 }
 
 export interface SocialItem {

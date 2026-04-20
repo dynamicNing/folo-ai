@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>folo-ai — Repository Report</title>
+  <style>
+    /* ── Reset & Tokens ─────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:       #0d1117;
+      --bg2:      #161b22;
+      --bg3:      #21262d;
+      --border:   #30363d;
+      --text:     #e6edf3;
+      --text2:    #8b949e;
+      --accent:   #58a6ff;
+      --accent2:  #1f6feb;
+      --green:    #3fb950;
+      --orange:   #d29922;
+      --red:      #f85149;
+      --purple:   #bc8cff;
+      --radius:   8px;
+      --sidebar:  260px;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      font-size: 14px;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+      font-size: 13px;
+    }
+    pre {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+      overflow-x: auto;
+    }
+    code { background: var(--bg3); padding: 2px 6px; border-radius: 4px; }
+
+    /* ── Layout ─────────────────────────────────────────── */
+    .layout { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--sidebar);
+      flex-shrink: 0;
+      background: var(--bg2);
+      border-right: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      padding: 20px 0;
+    }
+    .sidebar-logo {
+      padding: 0 20px 20px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 12px;
+    }
+    .sidebar-logo .repo-icon {
+      width: 36px; height: 36px;
+      background: var(--accent2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; margin-bottom: 8px;
+    }
+    .sidebar-logo h1 { font-size: 15px; font-weight: 600; word-break: break-all; }
+    .sidebar-logo p { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .nav-section { padding: 4px 0; }
+    .nav-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text2);
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      padding: 8px 20px 4px;
+    }
+    .nav-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 20px;
+      color: var(--text2);
+      border-radius: 0;
+      transition: background .15s, color .15s;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    .nav-link:hover, .nav-link.active {
+      background: var(--bg3);
+      color: var(--text);
+    }
+    .nav-link .nav-icon { font-size: 14px; width: 16px; text-align: center; }
+
+    /* Main */
+    .main { flex: 1; min-width: 0; padding: 32px 40px; max-width: 960px; }
+
+    /* ── Hero ────────────────────────────────────────────── */
+    .hero {
+      background: linear-gradient(135deg, var(--bg2) 0%, var(--bg3) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 32px;
+    }
+    .hero-top { display: flex; align-items: flex-start; gap: 20px; flex-wrap: wrap; }
+    .hero-icon {
+      width: 56px; height: 56px;
+      background: var(--accent2);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 28px; flex-shrink: 0;
+    }
+    .hero-info h2 { font-size: 24px; font-weight: 700; margin-bottom: 6px; }
+    .hero-info .remote-url {
+      font-size: 13px; color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .hero-info .remote-url a { color: var(--accent); }
+    .hero-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .meta-item {
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .meta-item .label { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: .06em; }
+    .meta-item .value { font-size: 15px; font-weight: 600; }
+    .meta-item .value.green { color: var(--green); }
+    .meta-item .value.accent { color: var(--accent); }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+    }
+    .badge.green { border-color: var(--green); color: var(--green); background: #1a2f1e; }
+    .badge.blue  { border-color: var(--accent); color: var(--accent); background: #0d1f40; }
+
+    /* ── Section ─────────────────────────────────────────── */
+    .section { margin-bottom: 40px; scroll-margin-top: 20px; }
+    .section-header {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .section-header h3 {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    .section-icon { font-size: 18px; }
+
+    /* ── Cards ───────────────────────────────────────────── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      margin-bottom: 12px;
+    }
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-card .label { font-size: 12px; color: var(--text2); }
+    .stat-card .value { font-size: 22px; font-weight: 700; color: var(--accent); }
+
+    /* ── Language Bar ────────────────────────────────────── */
+    .lang-bar-wrap {
+      height: 10px;
+      border-radius: 5px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 16px;
+      background: var(--bg3);
+    }
+    .lang-bar-wrap .seg { height: 100%; transition: width .3s; }
+    .lang-list { display: flex; flex-wrap: wrap; gap: 10px; }
+    .lang-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px;
+    }
+    .lang-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+    /* ── File Tree ───────────────────────────────────────── */
+    .file-tree { font-size: 13px; line-height: 1.8; }
+    .tree-node { padding-left: 18px; position: relative; }
+    .tree-node::before {
+      content: '';
+      position: absolute;
+      left: 6px; top: 0; bottom: 0;
+      border-left: 1px solid var(--border);
+    }
+    .tree-node:last-child::before { bottom: 50%; }
+    .tree-item {
+      display: flex; align-items: center; gap: 6px;
+      padding: 1px 0;
+      color: var(--text2);
+      cursor: pointer;
+    }
+    .tree-item:hover { color: var(--text); }
+    .tree-item.dir { color: var(--accent); font-weight: 500; }
+    .tree-item .tree-icon { font-size: 13px; width: 16px; text-align: center; }
+    .tree-toggle { cursor: pointer; user-select: none; }
+    .tree-children { display: block; }
+    .tree-children.collapsed { display: none; }
+
+    /* ── Commits ─────────────────────────────────────────── */
+    .commit-list { display: flex; flex-direction: column; gap: 1px; }
+    .commit-item {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      transition: background .15s;
+    }
+    .commit-item:hover { background: var(--bg2); }
+    .commit-hash {
+      font-family: monospace;
+      font-size: 12px;
+      color: var(--accent);
+      background: var(--bg3);
+      padding: 2px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .commit-msg { flex: 1; min-width: 0; }
+    .commit-msg .msg { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .commit-msg .meta { font-size: 12px; color: var(--text2); margin-top: 2px; }
+    .commit-date { font-size: 12px; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+
+    /* ── Architecture ────────────────────────────────────── */
+    .arch-layer {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+    .arch-layer-header {
+      display: flex; align-items: center; gap: 10px;
+      padding: 12px 16px;
+      background: var(--bg2);
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .arch-layer-header:hover { background: var(--bg3); }
+    .arch-layer-body {
+      padding: 16px;
+      border-top: 1px solid var(--border);
+      color: var(--text2);
+      font-size: 13px;
+      line-height: 1.7;
+    }
+    .arch-layer-body ul { padding-left: 20px; }
+    .arch-layer-body li { margin-bottom: 4px; }
+
+    /* ── Markdown ────────────────────────────────────────── */
+    .markdown h1, .markdown h2, .markdown h3, .markdown h4 {
+      margin: 20px 0 10px; color: var(--text);
+    }
+    .markdown h1 { font-size: 22px; border-bottom: 1px solid var(--border); padding-bottom: 8px; }
+    .markdown h2 { font-size: 18px; border-bottom: 1px solid var(--border); padding-bottom: 6px; }
+    .markdown h3 { font-size: 16px; }
+    .markdown p  { margin-bottom: 12px; color: var(--text2); }
+    .markdown ul, .markdown ol { padding-left: 24px; margin-bottom: 12px; color: var(--text2); }
+    .markdown li { margin-bottom: 4px; }
+    .markdown blockquote {
+      border-left: 3px solid var(--accent2);
+      padding-left: 12px;
+      color: var(--text2);
+      margin: 12px 0;
+    }
+    .markdown table { border-collapse: collapse; width: 100%; margin-bottom: 16px; font-size: 13px; }
+    .markdown th, .markdown td {
+      border: 1px solid var(--border);
+      padding: 8px 12px;
+      text-align: left;
+    }
+    .markdown th { background: var(--bg3); font-weight: 600; }
+    .markdown img { max-width: 100%; border-radius: var(--radius); }
+    .markdown hr { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+
+    /* ── Contributors ────────────────────────────────────── */
+    .contributor-list { display: flex; flex-wrap: wrap; gap: 12px; }
+    .contributor {
+      display: flex; align-items: center; gap: 10px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 6px 14px 6px 6px;
+    }
+    .contributor-avatar {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--accent2);
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700;
+      font-size: 13px;
+      flex-shrink: 0;
+    }
+    .contributor-name { font-size: 13px; }
+
+    /* ── Tag/Version ─────────────────────────────────────── */
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tag-item {
+      padding: 4px 12px;
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      font-size: 13px;
+      font-family: monospace;
+      color: var(--purple);
+    }
+
+    /* ── Scrollbar ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+
+    /* ── Responsive ──────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar ─────────────────────────────────── -->
+  <nav class="sidebar">
+    <div class="sidebar-logo">
+      <div class="repo-icon">📦</div>
+      <h1>folo-ai</h1>
+      <p>Repository Report</p>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Overview</div>
+      <a class="nav-link active" onclick="scrollTo('overview')">
+        <span class="nav-icon">🏠</span> Overview
+      </a>
+      <a class="nav-link" onclick="scrollTo('languages')">
+        <span class="nav-icon">💻</span> Languages
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Architecture</div>
+      <a class="nav-link" onclick="scrollTo('architecture')">
+        <span class="nav-icon">🏗️</span> Architecture
+      </a>
+      <a class="nav-link" onclick="scrollTo('file-tree')">
+        <span class="nav-icon">📁</span> File Tree
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">History</div>
+      <a class="nav-link" onclick="scrollTo('commits')">
+        <span class="nav-icon">📝</span> Commits
+      </a>
+      <a class="nav-link" onclick="scrollTo('contributors')">
+        <span class="nav-icon">👥</span> Contributors
+      </a>
+    </div>
+    <div class="nav-section">
+      <div class="nav-label">Docs</div>
+      <a class="nav-link" onclick="scrollTo('readme')">
+        <span class="nav-icon">📖</span> README
+      </a>
+    </div>
+  </nav>
+
+  <!-- ── Main ───────────────────────────────────── -->
+  <main class="main">
+
+    <!-- Hero -->
+    <div class="hero" id="overview">
+      <div class="hero-top">
+        <div class="hero-icon">📦</div>
+        <div class="hero-info">
+          <h2>folo-ai</h2>
+          <div class="remote-url">
+            🔗 <a href="https://github.com/dynamicNing/folo-ai.git" target="_blank">https://github.com/dynamicNing/folo-ai.git</a>
+          </div>
+          <p style="margin-top:10px;color:var(--text2);font-size:14px;">Nuxt 3 + TypeScript personal information hub with markdown rendering and SQLite metadata sync.</p>
+          <div style="margin-top:12px;display:flex;gap:8px;flex-wrap:wrap;">
+            <span class="badge blue">master</span>
+            <span class="badge green">Nuxt 3</span><span class="badge green">TypeScript</span><span class="badge green">Vue 3</span><span class="badge green">Nitro</span><span class="badge green">SQLite</span><span class="badge green">Pinia</span><span class="badge green">@nuxt/content</span>
+          </div>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="meta-item">
+          <span class="label">Total Commits</span>
+          <span class="value accent">38</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Contributors</span>
+          <span class="value accent">2</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">First Commit</span>
+          <span class="value">2026-04-16</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Last Commit</span>
+          <span class="value green">2026-04-19</span>
+        </div>
+        <div class="meta-item">
+          <span class="label">Primary Language</span>
+          <span class="value">JSON</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Languages -->
+    <div class="section" id="languages">
+      <div class="section-header">
+        <span class="section-icon">💻</span>
+        <h3>Languages</h3>
+      </div>
+      <div class="lang-bar-wrap"><div class="seg" style="width:74.37%;background:#d29922"></div><div class="seg" style="width:8.29%;background:#3fb950"></div><div class="seg" style="width:8.24%;background:#3178C6"></div><div class="seg" style="width:7.54%;background:#58a6ff"></div><div class="seg" style="width:1.57%;background:#563D7C"></div></div>
+      <div class="lang-list"><div class="lang-item"><div class="lang-dot" style="background:#d29922"></div>JSON (74.4%)</div><div class="lang-item"><div class="lang-dot" style="background:#3fb950"></div>Vue (8.3%)</div><div class="lang-item"><div class="lang-dot" style="background:#3178C6"></div>TypeScript (8.2%)</div><div class="lang-item"><div class="lang-dot" style="background:#58a6ff"></div>Markdown (7.5%)</div><div class="lang-item"><div class="lang-dot" style="background:#563D7C"></div>CSS (1.6%)</div></div>
+    </div>
+
+    <!-- Architecture -->
+    <div class="section" id="architecture">
+      <div class="section-header">
+        <span class="section-icon">🏗️</span>
+        <h3>Architecture &amp; Structure</h3>
+      </div>
+      <p style="color:var(--text2);margin-bottom:16px;font-size:14px;">The project uses a Nuxt 3 full-stack architecture with file-based pages for public and admin UI, Nitro API handlers for auth/content/sync workflows, and SQLite as the metadata store. Markdown source content is synchronized from the content-archive repository and rendered by @nuxt/content.</p>
+      
+<div class="arch-layer">
+  <div class="arch-layer-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <span>🖥️</span> UI Layer — Nuxt pages and components
+  </div>
+  <div class="arch-layer-body">
+    <p>Renders home, article, category, and admin interfaces via file routing.</p>
+    <ul>
+      <li><code>pages/index.vue</code> — hero and recent feed</li>
+      <li><code>pages/admin/*.vue</code> — login, items, collector, sync</li>
+      <li><code>components/ArticleCard.vue</code> — reusable article card</li>
+    </ul>
+  </div>
+</div>
+<div class="arch-layer">
+  <div class="arch-layer-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <span>🧠</span> Client Service Layer — API and state
+  </div>
+  <div class="arch-layer-body">
+    <p>Encapsulates HTTP requests and client auth state.</p>
+    <ul>
+      <li><code>composables/useApi.ts</code> — typed API calls</li>
+      <li><code>stores/auth.ts</code> — JWT state</li>
+      <li><code>middleware/auth.ts</code> — admin route guard</li>
+    </ul>
+  </div>
+</div>
+<div class="arch-layer">
+  <div class="arch-layer-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <span>🔌</span> API Layer — Nitro handlers
+  </div>
+  <div class="arch-layer-body">
+    <p>Provides auth, content, social, and sync endpoints.</p>
+    <ul>
+      <li><code>server/api/auth/login.post.ts</code> — bcrypt verify and JWT issue</li>
+      <li><code>server/api/items/*.ts</code> — list/get/update/delete metadata</li>
+      <li><code>server/api/webhook/github.post.ts</code> — GitHub push sync trigger</li>
+    </ul>
+  </div>
+</div>
+<div class="arch-layer">
+  <div class="arch-layer-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <span>💾</span> Storage Layer — SQLite + markdown
+  </div>
+  <div class="arch-layer-body">
+    <p>Stores metadata and sync logs in SQLite while markdown is read from archive/content sources.</p>
+    <ul>
+      <li><code>server/utils/db.ts</code> — schema bootstrap</li>
+      <li><code>server/utils/fileStore.ts</code> — article queries and updates</li>
+      <li><code>content.config.ts</code> — content source and exclude rules</li>
+    </ul>
+  </div>
+</div>
+<div class="arch-layer">
+  <div class="arch-layer-header" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display==='none'?'block':'none'">
+    <span>🔧</span> Pipeline Layer — sync and collector
+  </div>
+  <div class="arch-layer-body">
+    <p>Runs incremental/full sync, optional AI field generation, social collection, and sync logging.</p>
+    <ul>
+      <li><code>server/utils/contentPipeline.ts</code> — core sync pipeline</li>
+      <li><code>server/utils/collector.ts</code> — social + custom RSS collector</li>
+      <li><code>server/utils/syncLog.ts</code> — sync execution logs</li>
+    </ul>
+  </div>
+</div>
+
+    </div>
+
+    <!-- File Tree -->
+    <div class="section" id="file-tree">
+      <div class="section-header">
+        <span class="section-icon">📁</span>
+        <h3>File Tree</h3>
+      </div>
+      <div class="card">
+        <div class="file-tree" id="tree-root"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>assets</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>css</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">🎨</span>main.css</div></div></div></div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>components</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>ArticleCard.vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>NavBar.vue</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>composables</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>useApi.ts</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>content</div><div class="tree-children"></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>content-archive</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>ai-digest</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-16.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-17.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-18.md</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>economic-policy</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-16.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-17.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-18.md</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>skill-updates</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-16.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-17.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>2026-04-18.md</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>social</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>README.md</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>README.md</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>data</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📄</span>articles.db</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>docs</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>adr</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>001-markdown-as-database.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>002-vue3-no-ui-library.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>003-jwt-single-admin.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>004-collector-reserved.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>005-public-committed-to-git.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>README.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>sec-001-jwt-secret-weak-default.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>template.md</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>DEPLOY.md</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📝</span>LOCAL_DEV.md</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>layouts</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>admin.vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>default.vue</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>middleware</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>auth.ts</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>pages</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>admin</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>items</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[...slug].vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.vue</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>collector.vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>login.vue</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>sync.vue</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>article</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[...slug].vue</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>category</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[name].vue</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.vue</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>public</div><div class="tree-children"></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>scripts</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>pull-archive.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>reset-db.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>sync.ts</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>server</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>api</div><div class="tree-children"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>auth</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>login.post.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>items</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[...slug].delete.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[...slug].get.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>[...slug].patch.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>categories.get.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.get.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>social</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>collect</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>custom.post.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>feeds</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>[id]</div><div class="tree-children collapsed"></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.get.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>index.post.ts</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>collect.post.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>items.get.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>status.get.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>sync</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>logs.get.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▶</span><span class="tree-icon">📁</span>webhook</div><div class="tree-children collapsed"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>github.post.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>sync-all.post.ts</div></div></div></div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>health.get.ts</div></div></div></div></div><div class="tree-node"><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>utils</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>auth.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>collector.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>contentPipeline.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>db.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>fileStore.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>syncLog.ts</div></div></div></div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>stores</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>auth.ts</div></div><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>theme.ts</div></div></div></div><div class="tree-dir-wrap"><div class="tree-item dir"><span class="tree-toggle">▼</span><span class="tree-icon">📁</span>types</div><div class="tree-children"><div class="tree-node"><div class="tree-item"><span class="tree-icon">📜</span>article.ts</div></div></div></div><div class="tree-item"><span class="tree-icon">📄</span>.env.example</div><div class="tree-item"><span class="tree-icon">📜</span>app.vue</div><div class="tree-item"><span class="tree-icon">📜</span>content.config.ts</div><div class="tree-item"><span class="tree-icon">📜</span>nuxt.config.ts</div><div class="tree-item"><span class="tree-icon">⚙️</span>package-lock.json</div><div class="tree-item"><span class="tree-icon">⚙️</span>package.json</div><div class="tree-item"><span class="tree-icon">📝</span>README.md</div><div class="tree-item"><span class="tree-icon">⚙️</span>tsconfig.json</div></div>
+      </div>
+    </div>
+
+    <!-- Commits -->
+    <div class="section" id="commits">
+      <div class="section-header">
+        <span class="section-icon">📝</span>
+        <h3>Recent Commits</h3>
+      </div>
+      <div class="commit-list"><div class="commit-item"><span class="commit-hash">27598ae</span><div class="commit-msg"><div class="msg">fix(pipeline): 用 Contents API 拉正文，避免 raw CDN 缓存延迟导致 404</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-19</div></div><div class="commit-item"><span class="commit-hash">a887310</span><div class="commit-msg"><div class="msg">feat(admin): 新增内容同步页面，支持手动全量同步与同步记录</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">06bf65e</span><div class="commit-msg"><div class="msg">fix(pipeline): webhook 增量同步也用同一份 md 过滤规则</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">47459bd</span><div class="commit-msg"><div class="msg">fix(style): 隐藏正文首个 h1，避免与 article-header 标题重复</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">a921de8</span><div class="commit-msg"><div class="msg">fix: 多段 slug（如 skill-updates/2026-04-18）404</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">1880505</span><div class="commit-msg"><div class="msg">fix(pipeline): 分类子目录下的日期文件也识别为 published</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">9e2d958</span><div class="commit-msg"><div class="msg">feat: 类型筛选从 nav 移到首页顶部</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-18</div></div><div class="commit-item"><span class="commit-hash">e4056a4</span><div class="commit-msg"><div class="msg">docs: 新增 DEPLOY.md（部署与运维手册）</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">0049b5b</span><div class="commit-msg"><div class="msg">docs: 更新 README 反映 Nuxt 3 + TS 架构</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">163cd55</span><div class="commit-msg"><div class="msg">feat(pr5): 迁脚本到 TS + 清理旧代码</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">6758dde</span><div class="commit-msg"><div class="msg">feat(pr4): 接入 @nuxt/content（混合 md + SQLite 元数据）</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">76d0bb1</span><div class="commit-msg"><div class="msg">feat(pr3): API 迁移到 Nitro server/</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">474d277</span><div class="commit-msg"><div class="msg">feat(pr2): 前端页面迁移到 Nuxt pages/</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">00a1909</span><div class="commit-msg"><div class="msg">feat(pr1): Nuxt 3 + TypeScript 脚手架</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">85e7446</span><div class="commit-msg"><div class="msg">feat: 本地调试工具链 - sync/reset/pull 脚本 + LOCAL_DEV 文档</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">113455e</span><div class="commit-msg"><div class="msg">feat: 社交存档改为扁平化 md 格式（日期-平台.md） (#6)</div><div class="meta">dynamicNing</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">015761f</span><div class="commit-msg"><div class="msg">Merge branch &#x27;master&#x27; of https://github.com/dynamicNing/folo-ai</div><div class="meta">dynamicNing</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">dcc9031</span><div class="commit-msg"><div class="msg">feat: 自定义 RSS 源管理 - 添加/删除/禁用 RSS，采集后存入 custom 目录</div><div class="meta">dynamicNing</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">b419a55</span><div class="commit-msg"><div class="msg">fix: 过滤 README.md 不入库</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div><div class="commit-item"><span class="commit-hash">4d517ee</span><div class="commit-msg"><div class="msg">fix: 更新 GitHub 仓库拉取逻辑以匹配新仓库格式</div><div class="meta">Bo He</div></div><div class="commit-date">2026-04-17</div></div></div>
+    </div>
+
+    <!-- Contributors -->
+    <div class="section" id="contributors">
+      <div class="section-header">
+        <span class="section-icon">👥</span>
+        <h3>Contributors</h3>
+      </div>
+      <div class="contributor-list"><div class="contributor"><div class="contributor-avatar" style="background:#1f6feb">BH</div><span class="contributor-name">Bo He</span></div><div class="contributor"><div class="contributor-avatar" style="background:#388bfd">DY</div><span class="contributor-name">dynamicNing</span></div></div>
+    </div>
+
+    <!-- Tags -->
+    
+
+    <!-- README -->
+    <div class="section" id="readme">
+      <div class="section-header">
+        <span class="section-icon">📖</span>
+        <h3>README</h3>
+      </div>
+      <div class="card markdown" id="readme-content"><h1>folo-ai</h1><blockquote><strong>Follow One Step</strong> — 永远比信息快一步</blockquote><blockquote>folo-ai.com</blockquote><p>基于 Nuxt 3 + TypeScript 构建的个人信息聚合站：文章元数据存 SQLite，Markdown 正文由 <code>@nuxt/content</code> 从 <code>dynamicNing/content-archive</code> 渲染，支持亮/暗主题和管理后台。</p><h2>技术栈</h2><ul><li><strong>框架</strong>：Nuxt 3（Vue 3 + Nitro）+ TypeScript</li><li><strong>内容</strong>：<a href="https://content.nuxt.com" target="_blank">@nuxt/content</a> + Markdown（content-archive 仓库）</li><li><strong>后端</strong>：Nitro server/api + better-sqlite3 + JWT + bcryptjs</li><li><strong>前端</strong>：Pinia + 文件路由 + Composables</li><li><strong>解析</strong>：gray-matter + marked（webhook 抓取时预渲染 HTML 做降级）</li></ul><h2>目录结构</h2><pre><code>folo-ai/├── nuxt.config.ts · content.config.ts · app.vue├── pages/                   # 文件路由（index / article/[slug] / category/[name] / admin/**）├── layouts/                 # default（含 NavBar）、admin（侧栏）├── components/              # NavBar、ArticleCard├── composables/useApi.ts    # 统一 $fetch 封装 + 类型├── stores/                  # Pinia: auth（JWT）、theme├── middleware/auth.ts       # 保护 /admin/*├── types/article.ts         # Article / Social 全量类型├── server/│   ├── api/                 # Nitro handler（auth / items / social / webhook / health）│   └── utils/               # db, auth, fileStore, contentPipeline, collector├── content/                 # 仓库内示例 md（archive 未克隆时回落）├── scripts/                 # sync.ts · reset-db.ts · pull-archive.ts（tsx 跑）├── data/                    # articles.db · custom-feeds.json（gitignore）└── content-archive/         # content-archive 本地克隆（gitignore）</code></pre><h2>快速开始</h2><pre><code>npm installcp .env.example .env      # 编辑 JWT_SECRET / ADMIN_PASSWORD_HASH / GITHUB_TOKEN / MINIMAX_API_KEYnpm run archive:pull      # 克隆 content-archive 到 ./content-archivenpm run db:init           # 清空 SQLite 并全量同步npm run dev               # http://localhost:3000</code></pre><p>生成管理员密码 hash：</p><pre><code>node -e &quot;const b=require(&#x27;bcryptjs&#x27;);console.log(b.hashSync(&#x27;你的密码&#x27;,10))&quot;</code></pre><p>生产构建：</p><pre><code>npm run buildnode .output/server/index.mjs     # 或 npm run preview</code></pre><h2>常用命令</h2><p>| 命令 | 说明 |</p><p>| --- | --- |</p><p>| <code>npm run dev</code> | Nuxt dev（前后端同进程 :3000） |</p><p>| <code>npm run build</code> · <code>npm run preview</code> | 生产构建 / 预览 |</p><p>| <code>npm run sync</code> | 增量同步 content-archive → SQLite |</p><p>| <code>npm run db:reset</code> · <code>db:init</code> | 重置 / 重置+全量同步 |</p><p>| <code>npm run archive:pull</code> | 克隆或更新 content-archive |</p><h2>内容模型</h2><ul><li><strong>元数据</strong>（<code>status</code> / <code>category</code> / <code>tags</code> / <code>date</code> / <code>summary</code> / <code>sha</code> / AI 字段）— SQLite <code>articles</code> 表，由 webhook 或 <code>sync</code> 写入</li><li><strong>正文</strong> — <code>@nuxt/content</code> 从 <code>CONTENT_ARCHIVE_DIR</code> 读原始 md，<code>&lt;ContentRenderer&gt;</code> 运行时渲染；若 md 查不到，降级到 SQLite 的 <code>content</code>（marked 预渲染 HTML）</li><li><strong>状态</strong> — <code>published</code> / <code>draft</code> / <code>archived</code>；未登录只看 published</li></ul><h3>触发同步</h3><ul><li><strong>Webhook</strong>：<code>POST /api/webhook/github</code>（HMAC-SHA256 校验 <code>X-Hub-Signature-256</code>）</li><li><strong>全量</strong>：<code>POST /api/webhook/sync-all</code>（需 JWT）或本地 <code>npm run sync</code></li></ul><h2>路由</h2><h3>页面</h3><p>| 路径 | 说明 |</p><p>| --- | --- |</p><p>| <code>/</code> | 首页（Hero + 最近更新） |</p><p>| <code>/article/:slug</code> | 文章详情 |</p><p>| <code>/category/:name</code> | 分类筛选 |</p><p>| <code>/admin/login</code> | 登录 |</p><p>| <code>/admin</code> | 概览 |</p><p>| <code>/admin/items</code> · <code>/admin/items/:slug</code> | 内容管理 / 预览 |</p><p>| <code>/admin/collector</code> | 社交采集 + 自定义 RSS |</p><h3>API（<code>/api</code> 下）</h3><pre><code>GET    /healthPOST   /auth/loginGET    /items                      ?category= &amp;tag= &amp;status= &amp;page= &amp;pageSize=GET    /items/categoriesGET    /items/:slugPATCH  /items/:slug/status         🔒DELETE /items/:slug                🔒GET    /social/statusGET    /social/items               ?platform= &amp;page= &amp;pageSize=POST   /social/collect             🔒POST   /social/collect/custom      🔒GET    /social/feedsPOST   /social/feeds               🔒DELETE /social/feeds/:id           🔒PATCH  /social/feeds/:id/toggle    🔒POST   /webhook/github             HMACPOST   /webhook/sync-all           🔒</code></pre><p>🔒 = 需要 <code>Authorization: Bearer &lt;jwt&gt;</code>。</p><h2>部署</h2><h3>PM2</h3><pre><code>npm run buildpm2 start .output/server/index.mjs --name folo-aipm2 save &amp;&amp; pm2 startup</code></pre><h3>Nginx</h3><pre><code>location / {    proxy_pass http://localhost:3000;    proxy_set_header Host $host;    proxy_set_header X-Real-IP $remote_addr;}</code></pre><h3>部署注意</h3><ul><li>服务端需要克隆 <code>content-archive</code> 并设置 <code>CONTENT_ARCHIVE_DIR</code>，否则 <code>@nuxt/content</code> 只能读仓库内的 <code>content/</code> 示例</li><li>首次部署跑一次 <code>npm run db:init</code> 物化 SQLite</li><li>Webhook secret 建议设 <code>GITHUB_WEBHOOK_SECRET</code> 强校验</li></ul><p>更多本地调试细节见 <a href="docs/LOCAL_DEV.md" target="_blank"><code>docs/LOCAL_DEV.md</code></a>；部署与运维见 <a href="docs/DEPLOY.md" target="_blank"><code>docs/DEPLOY.md</code></a>。</p></div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+function scrollTo(id) {
+  const el = document.getElementById(id);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+}
+
+// Toggle tree dirs
+document.addEventListener('click', function(e) {
+  const toggle = e.target.closest('.tree-toggle');
+  if (toggle) {
+    const children = toggle.closest('.tree-dir-wrap').querySelector('.tree-children');
+    if (children) {
+      children.classList.toggle('collapsed');
+      toggle.textContent = children.classList.contains('collapsed') ? '▶' : '▼';
+    }
+  }
+});
+
+// Scroll spy
+const sections = ['overview','languages','architecture','file-tree','commits','contributors','readme'];
+const navLinks = document.querySelectorAll('.nav-link');
+window.addEventListener('scroll', function() {
+  let current = '';
+  sections.forEach(id => {
+    const el = document.getElementById(id);
+    if (el && el.getBoundingClientRect().top <= 80) current = id;
+  });
+  navLinks.forEach(link => {
+    link.classList.remove('active');
+    if (link.getAttribute('onclick') && link.getAttribute('onclick').includes(current)) {
+      link.classList.add('active');
+    }
+  });
+}, { passive: true });
+</script>
+</body>
+</html>

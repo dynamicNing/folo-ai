@@ -4,7 +4,12 @@
       <div class="login-brand">folo<span class="brand-accent">-</span>ai</div>
       <div class="login-sub">Follow One Step · 管理后台</div>
 
-      <form class="login-form" @submit.prevent="submit">
+      <div v-if="checkingSession" class="session-check">
+        <span class="spinner" style="width:14px;height:14px;border-width:2px" />
+        <span>正在检查登录状态...</span>
+      </div>
+
+      <form v-else class="login-form" @submit.prevent="submit">
         <div class="field">
           <label class="field-label">密码</label>
           <input
@@ -30,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useAuthStore } from '~/stores/auth'
 
 definePageMeta({ layout: false })
@@ -41,13 +46,23 @@ const api = useApi()
 const password = ref('')
 const errorMsg = ref('')
 const loading = ref(false)
+const checkingSession = ref(true)
+
+onMounted(async () => {
+  await auth.refreshSession()
+  if (auth.isLoggedIn) {
+    router.replace('/admin')
+    return
+  }
+  checkingSession.value = false
+})
 
 async function submit() {
   errorMsg.value = ''
   loading.value = true
   try {
-    const { token } = await api.login(password.value)
-    auth.setToken(token)
+    await api.login(password.value)
+    auth.markLoggedIn()
     router.push('/admin')
   } catch (e) {
     errorMsg.value = (e as Error).message
@@ -63,6 +78,7 @@ async function submit() {
 .login-brand { font-family: var(--font-display); font-size: 2rem; font-weight: 700; letter-spacing: -0.04em; color: var(--text); margin-bottom: 0.25rem; }
 .brand-accent { color: var(--accent); }
 .login-sub { font-family: var(--font-display); font-size: 0.75rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 2rem; }
+.session-check { display: flex; align-items: center; justify-content: center; gap: 0.55rem; color: var(--text-muted); font-family: var(--font-display); font-size: 0.82rem; font-weight: 600; letter-spacing: 0.02em; padding: 0.4rem 0 0.8rem; }
 .login-form { display: flex; flex-direction: column; gap: 1rem; }
 .field { display: flex; flex-direction: column; gap: 0.4rem; }
 .field-label { font-family: var(--font-display); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--text-muted); }

@@ -1,37 +1,51 @@
 import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-
-function getCookie(name: string): string {
-  if (import.meta.server) return ''
-  const match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/[()]/g, '\\$&') + '=([^;]*)'))
-  return match ? decodeURIComponent(match[1]) : ''
-}
+import { ref } from 'vue'
 
 export const useAuthStore = defineStore('auth', () => {
-  const token = ref<string>('')
+  const isLoggedIn = ref(false)
+  const hydrated = ref(false)
+  const api = useApi()
 
   if (import.meta.client) {
-    token.value = getCookie('auth_token') || localStorage.getItem('token') || ''
+    isLoggedIn.value = localStorage.getItem('admin_session_hint') === '1'
   }
 
-  const isLoggedIn = computed(() => !!token.value)
-
-  function setToken(t: string) {
-    token.value = t
-    if (import.meta.client) localStorage.setItem('token', t)
+  async function refreshSession() {
+    if (import.meta.server) return
+    try {
+      const me = await api.getMe()
+      isLoggedIn.value = me.authenticated
+      if (me.authenticated) localStorage.setItem('admin_session_hint', '1')
+      else localStorage.removeItem('admin_session_hint')
+    } catch {
+      isLoggedIn.value = false
+      localStorage.removeItem('admin_session_hint')
+    } finally {
+      hydrated.value = true
+    }
   }
 
-  function logout() {
-    token.value = ''
+  function markLoggedIn() {
+    isLoggedIn.value = true
+    if (import.meta.client) localStorage.setItem('admin_session_hint', '1')
+  }
+
+  async function logout() {
+    try {
+      await api.logout()
+    } catch {
+      // 即使服务端退出失败，也清理本地提示状态并跳登录页
+    }
+    isLoggedIn.value = false
     if (import.meta.client) {
+      localStorage.removeItem('admin_session_hint')
       localStorage.removeItem('token')
-      document.cookie = 'auth_token=; Max-Age=0; path=/'
     }
   }
 
   function authHeader(): Record<string, string> {
-    return token.value ? { Authorization: `Bearer ${token.value}` } : {}
+    return {}
   }
 
-  return { token, isLoggedIn, setToken, logout, authHeader }
+  return { isLoggedIn, hydrated, refreshSession, markLoggedIn, logout, authHeader }
 })
