@@ -79,7 +79,9 @@ export default defineEventHandler(async event => {
 
   console.log(`[webhook] push: +${added.length} ~${modified.length} -${removed.length}`)
   queue.push({ added, modified, removed })
-  drainQueue()
+  
+  // GitHub PR merge 后 API 有短暂不一致，延迟 5 分钟再处理
+  setTimeout(() => drainQueue(), 5 * 60 * 1000)
 
   return { ok: true }
 })
