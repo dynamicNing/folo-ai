@@ -11,6 +11,26 @@ import type {
   SyncLog,
   SyncRunResult,
 } from '~/types/article'
+import type { LearningChapterDetail, LearningDepth, LearningGenerateResponse, LearningSourceType, LearningTopic, LearningTopicDetail } from '~/types/learning'
+import type {
+  AnthropicGatewayDebugRequest,
+  AnthropicGatewayDebugResponse,
+  ModelSettingsResponse,
+  AnthropicGatewayUpdateRequest,
+} from '~/types/settings'
+import type {
+  ApprovalRequest,
+  Artifact,
+  SkillCatalogSyncResponse,
+  SkillDefinitionDetail,
+  SkillDefinitionSummary,
+  SkillListParams,
+  SkillRunCreateRequest,
+  SkillRunDetail,
+  SkillRunEvent,
+  SkillRunListParams,
+  SkillRunListResponse,
+} from '~/types/skill'
 
 type Headers = Record<string, string>
 
@@ -70,6 +90,76 @@ export function useApi() {
       }),
     getMe: () =>
       request<AuthMeResponse>('/auth/me'),
+
+    // Learning
+    getLearningTopics: () =>
+      request<{ topics: LearningTopic[] }>('/learn/topics'),
+    getLearningTopic: (slug: string) =>
+      request<LearningTopicDetail>(`/learn/topics/${slug}`),
+    getLearningChapter: (topicSlug: string, chapterSlug: string) =>
+      request<LearningChapterDetail>(`/learn/topics/${topicSlug}/chapters/${chapterSlug}`),
+    generateLearningTopic: (
+      payload: { topic: string; source_type: LearningSourceType; context?: string; depth: LearningDepth },
+      headers: Headers = {}
+    ) =>
+      request<LearningGenerateResponse>('/learn/generate', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }),
+
+    // Skills
+    getSkills: (params: SkillListParams = {}) =>
+      request<{ data: SkillDefinitionSummary[] }>(`/skills${toQuery(params as Record<string, unknown>)}`),
+    getSkill: (slug: string, headers: Headers = {}) =>
+      request<SkillDefinitionDetail>(`/skills/${slug}`, { headers }),
+    syncSkills: (headers: Headers = {}) =>
+      request<SkillCatalogSyncResponse>('/skills/sync', {
+        method: 'POST',
+        headers,
+      }),
+    getSkillRuns: (params: SkillRunListParams = {}, headers: Headers = {}) =>
+      request<SkillRunListResponse>(`/skill-runs${toQuery(params as Record<string, unknown>)}`, { headers }),
+    getSkillRun: (runUid: string, headers: Headers = {}) =>
+      request<SkillRunDetail>(`/skill-runs/${runUid}`, { headers }),
+    getSkillRunEvents: (runUid: string, headers: Headers = {}, since = 0, limit = 200) =>
+      request<{ data: SkillRunEvent[] }>(`/skill-runs/${runUid}/events${toQuery({ since, limit })}`, { headers }),
+    getSkillRunApprovals: (runUid: string, headers: Headers = {}) =>
+      request<{ data: ApprovalRequest[] }>(`/skill-runs/${runUid}/approvals`, { headers }),
+    getSkillRunArtifacts: (runUid: string, headers: Headers = {}) =>
+      request<{ data: Artifact[] }>(`/skill-runs/${runUid}/artifacts`, { headers }),
+    createSkillRun: (payload: SkillRunCreateRequest, headers: Headers = {}) =>
+      request<SkillRunDetail>('/skill-runs', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }),
+    approveSkillRunApproval: (runUid: string, approvalId: number, headers: Headers = {}) =>
+      request<{ run: SkillRunDetail; approval: ApprovalRequest }>(`/skill-runs/${runUid}/approvals/${approvalId}/approve`, {
+        method: 'POST',
+        headers,
+      }),
+    rejectSkillRunApproval: (runUid: string, approvalId: number, headers: Headers = {}) =>
+      request<{ run: SkillRunDetail; approval: ApprovalRequest }>(`/skill-runs/${runUid}/approvals/${approvalId}/reject`, {
+        method: 'POST',
+        headers,
+      }),
+
+    // Settings
+    getModelSettings: (headers: Headers = {}) =>
+      request<ModelSettingsResponse>('/settings/models', { headers }),
+    updateAnthropicSettings: (payload: AnthropicGatewayUpdateRequest, headers: Headers = {}) =>
+      request<ModelSettingsResponse>('/settings/models/anthropic', {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload),
+      }),
+    debugAnthropicGateway: (payload: AnthropicGatewayDebugRequest, headers: Headers = {}) =>
+      request<AnthropicGatewayDebugResponse>('/settings/models/anthropic-debug', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }),
 
     // Social
     getSocialStatus: () => request<SocialStatus>('/social/status'),

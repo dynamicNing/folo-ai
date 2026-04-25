@@ -1,7 +1,6 @@
-import jwt from 'jsonwebtoken'
 import { getCookie } from 'h3'
 
-export default defineNuxtRouteMiddleware(to => {
+export default defineNuxtRouteMiddleware(async to => {
   // 登录页本身放行
   if (to.path === '/admin/login') return
 
@@ -24,6 +23,7 @@ export default defineNuxtRouteMiddleware(to => {
   if (!token) return navigateTo('/admin/login')
   try {
     const config = useRuntimeConfig()
+    const jwt = await import('jsonwebtoken')
     jwt.verify(token, config.jwtSecret)
   } catch {
     return navigateTo('/admin/login')

@@ -20,6 +20,7 @@
 | [ADR-003](./003-jwt-single-admin.md) | 管理后台使用 JWT 鉴权，单管理员模式 | 已接受 | 2026-04-16 |
 | [ADR-004](./004-collector-reserved.md) | AI 采集模块预留接口，暂不实现 | 已接受 | 2026-04-16 |
 | [ADR-005](./005-public-committed-to-git.md) | public/ 构建产物提交进 Git，服务器免构建部署 | 已接受 | 2026-04-16 |
+| [ADR-006](./006-skill-workbench-inside-monolith.md) | Skill Workbench 先在现有 Nuxt/Nitro 单体内实现 | 已接受 | 2026-04-25 |
 
 ## 安全隐患
 

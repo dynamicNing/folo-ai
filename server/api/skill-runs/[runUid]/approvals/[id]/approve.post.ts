@@ -1,0 +1,52 @@
+import { apiError, requireAuth } from '~/server/utils/auth'
+import { enqueueSkillRun } from '~/server/utils/skillRunQueue'
+import {
+  appendSkillRunEvent,
+  getApprovalRequest,
+  getSkillDefinition,
+  getSkillRun,
+  queueSkillRun,
+  resolveApprovalRequest,
+} from '~/server/utils/skillStore'
+import type { ApprovalRequest, SkillRunDetail } from '~/types/skill'
+
+export default defineEventHandler((event): { run: SkillRunDetail; approval: ApprovalRequest } => {
+  requireAuth(event)
+  const runUid = getRouterParam(event, 'runUid') || ''
+  const approvalId = Number(getRouterParam(event, 'id') || 0)
+
+  const run = getSkillRun(runUid)
+  if (!run) apiError(404, '运行记录不存在')
+  if (run.status !== 'waiting_approval') apiError(400, '当前运行不处于待审批状态')
+
+  const approval = getApprovalRequest(approvalId)
+  if (!approval || approval.run_uid !== runUid) apiError(404, '审批请求不存在')
+  if (approval.status !== 'pending') apiError(400, '审批请求已处理')
+
+  const skill = getSkillDefinition(run.skill_slug)
+  if (!skill) apiError(404, '技能不存在')
+  if (skill.engine_type !== 'llm_direct' && skill.engine_type !== 'agent_sdk') {
+    apiError(400, '当前阶段暂不支持恢复该 skill 引擎')
+  }
+
+  const resolved = resolveApprovalRequest(approvalId, 'approved')
+  if (!resolved) apiError(500, '审批状态更新失败')
+
+  queueSkillRun(runUid)
+  appendSkillRunEvent(runUid, 'approval.approved', {
+    approval_id: approvalId,
+    scope: resolved.scope,
+  })
+
+  enqueueSkillRun({
+    runUid,
+    skill,
+    input: run.input,
+    provider: run.provider,
+    model: run.model,
+  })
+
+  const refreshedRun = getSkillRun(runUid)
+  if (!refreshedRun) apiError(500, '运行记录不存在')
+  return { run: refreshedRun, approval: resolved }
+})

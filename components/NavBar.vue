@@ -7,6 +7,7 @@
       </NuxtLink>
 
       <div class="nav-right">
+        <NuxtLink to="/learn" class="nav-link">学习</NuxtLink>
         <button class="theme-btn" @click="themeStore.toggle()" :aria-label="themeStore.theme === 'light' ? '切换暗色' : '切换亮色'">
           <svg v-if="themeStore.theme === 'light'" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
           <svg v-else width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
@@ -60,11 +61,24 @@ const themeStore = useThemeStore()
   text-decoration: none; text-transform: uppercase;
   transition: all 0.15s; white-space: nowrap;
 }
+.nav-link {
+  display: inline-flex; align-items: center;
+  min-height: 40px;
+  padding: 0 0.4rem;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.nav-link:hover { color: var(--accent); }
 .nav-admin:hover { color: var(--accent); border-color: var(--accent); background: var(--accent-subtle); }
 .admin-arrow { font-size: 0.9em; transition: transform 0.15s; }
 .nav-admin:hover .admin-arrow { transform: translate(1px, -1px); }
 
 @media (max-width: 640px) {
   .logo-tag { display: none; }
+  .nav-link { display: none; }
 }
 </style>
