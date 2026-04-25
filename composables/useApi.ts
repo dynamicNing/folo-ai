@@ -11,6 +11,7 @@ import type {
   SyncLog,
   SyncRunResult,
 } from '~/types/article'
+import type { LearningChapterDetail, LearningDepth, LearningGenerateResponse, LearningSourceType, LearningTopic, LearningTopicDetail } from '~/types/learning'
 
 type Headers = Record<string, string>
 
@@ -70,6 +71,23 @@ export function useApi() {
       }),
     getMe: () =>
       request<AuthMeResponse>('/auth/me'),
+
+    // Learning
+    getLearningTopics: () =>
+      request<{ topics: LearningTopic[] }>('/learn/topics'),
+    getLearningTopic: (slug: string) =>
+      request<LearningTopicDetail>(`/learn/topics/${slug}`),
+    getLearningChapter: (topicSlug: string, chapterSlug: string) =>
+      request<LearningChapterDetail>(`/learn/topics/${topicSlug}/chapters/${chapterSlug}`),
+    generateLearningTopic: (
+      payload: { topic: string; source_type: LearningSourceType; context?: string; depth: LearningDepth },
+      headers: Headers = {}
+    ) =>
+      request<LearningGenerateResponse>('/learn/generate', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }),
 
     // Social
     getSocialStatus: () => request<SocialStatus>('/social/status'),

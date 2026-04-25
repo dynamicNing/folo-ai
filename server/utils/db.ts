@@ -47,4 +47,39 @@ db.exec(`
     detail      TEXT
   );
   CREATE INDEX IF NOT EXISTS idx_sync_logs_started ON sync_logs(started_at DESC);
+
+  CREATE TABLE IF NOT EXISTS learning_topics (
+    topic_slug              TEXT PRIMARY KEY,
+    repo_path               TEXT NOT NULL,
+    title                   TEXT NOT NULL,
+    source_type             TEXT NOT NULL DEFAULT 'concept',
+    description             TEXT NOT NULL DEFAULT '',
+    learning_goals          TEXT NOT NULL DEFAULT '[]',
+    tags                    TEXT NOT NULL DEFAULT '[]',
+    total_chapters          INTEGER NOT NULL DEFAULT 0,
+    estimated_read_minutes  INTEGER NOT NULL DEFAULT 0,
+    content_html            TEXT NOT NULL DEFAULT '',
+    created_at              TEXT NOT NULL,
+    updated_at              TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS learning_chapters (
+    topic_slug          TEXT NOT NULL,
+    chapter_slug        TEXT NOT NULL,
+    repo_path           TEXT NOT NULL,
+    chapter_no          INTEGER NOT NULL,
+    title               TEXT NOT NULL,
+    estimated_minutes   INTEGER NOT NULL DEFAULT 0,
+    learning_goals      TEXT NOT NULL DEFAULT '[]',
+    summary             TEXT NOT NULL DEFAULT '',
+    content_html        TEXT NOT NULL DEFAULT '',
+    created_at          TEXT NOT NULL,
+    updated_at          TEXT NOT NULL,
+    PRIMARY KEY (topic_slug, chapter_slug)
+  );
+
+  CREATE INDEX IF NOT EXISTS idx_learning_topics_created_at
+    ON learning_topics(created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_learning_chapters_topic
+    ON learning_chapters(topic_slug, chapter_no ASC);
 `)
