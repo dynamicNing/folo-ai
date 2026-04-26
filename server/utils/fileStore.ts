@@ -91,5 +91,7 @@ export function removeArticle(slug: string): boolean {
 
 export function listCategories(): string[] {
   const rows = db.prepare('SELECT DISTINCT category FROM articles').all() as { category: string }[]
-  return rows.map(r => r.category).filter(Boolean)
+  const categories = rows.map(r => r.category).filter(Boolean)
+  // 手动添加 Social 标签（数据来自独立的 social API）
+  return ['Social', ...categories]
 }

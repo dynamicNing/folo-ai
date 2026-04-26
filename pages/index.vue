@@ -28,7 +28,7 @@
     </div>
 
     <template v-else>
-      <NuxtLink :to="`/article/${items[0].slug}`" class="hero">
+      <NuxtLink v-if="selected !== 'Social'" :to="`/article/${items[0].slug}`" class="hero">
         <div class="hero-meta">
           <span class="tag">{{ items[0].category }}</span>
           <span class="hero-date">{{ formatDate(items[0].date) }}</span>
@@ -41,13 +41,24 @@
         <span class="hero-cta">阅读全文 <span class="cta-arrow">→</span></span>
       </NuxtLink>
 
+      <a v-else :href="decodeURIComponent(items[0].slug.replace('social-', ''))" target="_blank" rel="noopener noreferrer" class="hero">
+        <div class="hero-meta">
+          <span class="tag">{{ items[0].category }}</span>
+          <span class="hero-date">{{ formatDate(items[0].date) }}</span>
+        </div>
+        <h1 class="hero-title">{{ items[0].title }}</h1>
+        <p v-if="items[0].summary" class="hero-summary">{{ items[0].summary }}</p>
+        <span class="hero-cta">查看原文 <span class="cta-arrow">↗</span></span>
+      </a>
+
       <template v-if="items.length > 1">
         <div class="section-header">
           <span class="section-label">最近更新</span>
           <span class="section-count text-muted text-sm">共 {{ total }} 篇</span>
         </div>
         <div class="feed">
-          <ArticleCard v-for="item in items.slice(1)" :key="item.slug" :item="item" />
+          <ArticleCard v-if="selected !== 'Social'" v-for="item in items.slice(1)" :key="item.slug" :item="item" />
+          <SocialCard v-else v-for="item in items.slice(1)" :key="item.slug" :item="item" />
         </div>
       </template>
     </template>
@@ -62,7 +73,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import type { Article } from '~/types/article'
+import type { Article, SocialItem } from '~/types/article'
 
 const api = useApi()
 const items = ref<Article[]>([])
@@ -78,17 +89,44 @@ function formatDate(d: string): string {
   return new Date(d).toLocaleDateString('zh-CN', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+// 将 SocialItem 转换为 Article 格式用于展示
+function socialToArticle(social: SocialItem): Article {
+  return {
+    slug: `social-${encodeURIComponent(social.url)}`,
+    title: social.title,
+    category: social.platform || social.source,
+    tags: [],
+    date: social.fetched_at,
+    summary: social.description || '',
+    content: '',
+    status: 'published',
+    updated_at: social.fetched_at,
+  }
+}
+
 async function load() {
   pending.value = true
   try {
-    const res = await api.getItems({
-      page: page.value,
-      status: 'published',
-      category: selected.value || undefined,
-    })
-    items.value = res.data
-    total.value = res.total
-    totalPages.value = res.totalPages
+    if (selected.value === 'Social') {
+      // 加载 social 数据
+      const res = await api.getSocialItems({
+        page: page.value,
+        pageSize: 20,
+      })
+      items.value = res.data.map(socialToArticle)
+      total.value = res.total
+      totalPages.value = res.totalPages
+    } else {
+      // 加载文章数据
+      const res = await api.getItems({
+        page: page.value,
+        status: 'published',
+        category: selected.value || undefined,
+      })
+      items.value = res.data
+      total.value = res.total
+      totalPages.value = res.totalPages
+    }
   } finally { pending.value = false }
 }
 
