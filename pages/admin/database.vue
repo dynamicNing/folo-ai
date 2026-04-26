@@ -174,6 +174,15 @@ const TABLES: TableConfig[] = [
     searchHint: 'kind',
     orderBy: 'created_at DESC',
   },
+  {
+    name: 'admin_logs',
+    label: '操作日志',
+    pk: 'id',
+    cols: ['id', 'action', 'table_name', 'pk_value', 'created_at'],
+    searchCol: 'table_name',
+    searchHint: 'table_name',
+    orderBy: 'created_at DESC',
+  },
 ]
 
 const PAGE_SIZE = 30
@@ -205,20 +214,28 @@ async function fetchRows() {
   try {
     const cfg = activeConfig.value
     const offset = (page.value - 1) * PAGE_SIZE
-    const searchClause = search.value.trim()
-      ? `WHERE ${cfg.searchCol} LIKE '%${search.value.trim().replace(/'/g, "''")}%'`
-      : ''
+
+    // 使用参数化查询
+    const searchClause = search.value.trim() ? `WHERE ${cfg.searchCol} LIKE ?` : ''
+    const searchParam = search.value.trim() ? `%${search.value.trim()}%` : null
+    const params = searchParam ? [searchParam] : []
 
     const [dataRes, countRes] = await Promise.all([
       $fetch<{ rows: Record<string, unknown>[] }>('/api/db/query', {
         method: 'POST',
         headers: auth.authHeader(),
-        body: { sql: `SELECT * FROM ${cfg.name} ${searchClause} ORDER BY ${cfg.orderBy} LIMIT ${PAGE_SIZE} OFFSET ${offset}` },
+        body: {
+          sql: `SELECT ${cfg.cols.join(', ')} FROM ${cfg.name} ${searchClause} ORDER BY ${cfg.orderBy} LIMIT ${PAGE_SIZE} OFFSET ${offset}`,
+          params,
+        },
       }),
       $fetch<{ rows: Record<string, unknown>[] }>('/api/db/query', {
         method: 'POST',
         headers: auth.authHeader(),
-        body: { sql: `SELECT COUNT(*) as cnt FROM ${cfg.name} ${searchClause}` },
+        body: {
+          sql: `SELECT COUNT(*) as cnt FROM ${cfg.name} ${searchClause}`,
+          params,
+        },
       }),
     ])
     rows.value = dataRes.rows || []
@@ -231,26 +248,31 @@ async function fetchRows() {
 }
 
 async function fetchCounts() {
-  for (const t of TABLES) {
-    try {
-      const res = await $fetch<{ rows: Record<string, unknown>[] }>('/api/db/query', {
-        method: 'POST',
-        headers: auth.authHeader(),
-        body: { sql: `SELECT COUNT(*) as cnt FROM ${t.name}` },
-      })
-      counts.value[t.name] = Number((res.rows?.[0] as Record<string, unknown>)?.cnt ?? 0)
-    } catch {}
+  // 并行查询所有表的行数
+  const promises = TABLES.map(t =>
+    $fetch<{ rows: Record<string, unknown>[] }>('/api/db/query', {
+      method: 'POST',
+      headers: auth.authHeader(),
+      body: { sql: `SELECT COUNT(*) as cnt FROM ${t.name}`, params: [] },
+    }).then(res => ({
+      name: t.name,
+      count: Number((res.rows?.[0] as Record<string, unknown>)?.cnt ?? 0),
+    })).catch(() => ({ name: t.name, count: 0 }))
+  )
+
+  const results = await Promise.all(promises)
+  for (const { name, count } of results) {
+    counts.value[name] = count
   }
 }
 
 async function doDelete(pkValues: string[]) {
   if (!pkValues.length) return
   const cfg = activeConfig.value
-  const placeholders = pkValues.map(v => `'${v.replace(/'/g, "''")}'`).join(',')
-  await $fetch('/api/db/query', {
+  await $fetch('/api/db/batch-delete', {
     method: 'POST',
     headers: auth.authHeader(),
-    body: { sql: `DELETE FROM ${cfg.name} WHERE ${cfg.pk} IN (${placeholders})` },
+    body: { table: cfg.name, pk: cfg.pk, ids: pkValues },
   })
 }
 
@@ -268,7 +290,14 @@ async function deleteOne(row: Record<string, unknown>) {
 
 async function deleteSelected() {
   if (!selected.size) return
-  if (!confirm(`确认删除选中的 ${selected.size} 条记录？此操作不可恢复。`)) return
+  if (selected.size > 50) {
+    const confirmed = confirm(
+      `即将删除 ${selected.size} 条记录，数量较多，建议先备份数据库。\n\n是否继续执行？`
+    )
+    if (!confirmed) return
+  } else {
+    if (!confirm(`确认删除选中的 ${selected.size} 条记录？此操作不可恢复。`)) return
+  }
   try {
     await doDelete([...selected])
     await Promise.all([fetchRows(), fetchCounts()])

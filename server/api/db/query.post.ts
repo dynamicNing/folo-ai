@@ -3,6 +3,7 @@ import { requireAuth, apiError } from '~/server/utils/auth'
 
 interface QueryBody {
   sql?: string
+  params?: unknown[]
 }
 
 export default defineEventHandler(async (event) => {
@@ -10,6 +11,7 @@ export default defineEventHandler(async (event) => {
 
   const body = await readBody(event).catch(() => ({})) as QueryBody
   const sql = body.sql?.trim()
+  const params = body.params || []
 
   if (!sql) apiError(400, 'sql 不能为空')
 
@@ -23,10 +25,10 @@ export default defineEventHandler(async (event) => {
   try {
     const isSelect = upper.startsWith('SELECT') || upper.startsWith('WITH') || upper.startsWith('EXPLAIN')
     if (isSelect) {
-      const rows = db.prepare(sql).all() as Record<string, unknown>[]
+      const rows = db.prepare(sql).all(...params) as Record<string, unknown>[]
       return { rows }
     } else {
-      const result = db.prepare(sql).run()
+      const result = db.prepare(sql).run(...params)
       return { changes: result.changes, lastInsertRowid: result.lastInsertRowid }
     }
   } catch (e) {

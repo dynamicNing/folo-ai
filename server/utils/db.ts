@@ -221,6 +221,17 @@ db.exec(`
   );
   CREATE INDEX IF NOT EXISTS idx_artifacts_run
     ON artifacts(run_uid, created_at DESC);
+
+  CREATE TABLE IF NOT EXISTS admin_logs (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    action     TEXT NOT NULL,
+    table_name TEXT NOT NULL,
+    pk_value   TEXT NOT NULL,
+    old_data   TEXT,
+    created_at TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_admin_logs_created
+    ON admin_logs(created_at DESC);
 `)
 
 ensureColumn('skill_definitions', 'source_origin', `TEXT NOT NULL DEFAULT 'builtin'`)
