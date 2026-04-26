@@ -126,10 +126,17 @@ export function getAnthropicGatewaySettings(): AnthropicGatewaySettings {
 
 export function getEffectiveAnthropicGatewaySettings(): AnthropicGatewayEffectiveSettings {
   const resolved = getResolvedAnthropicGatewayConfig()
+  const stored = getStoredAnthropicGatewaySnapshot()
+
+  // 判断实际来源：如果 enabled 且所有关键字段都来自 DB，才算 database
+  const isFullyFromDatabase = resolved.enabled
+    && stored.base_url
+    && stored.default_model
+    && stored.api_key
 
   return {
     enabled: resolved.enabled,
-    source: resolved.enabled ? 'database' : 'fallback',
+    source: isFullyFromDatabase ? 'database' : 'fallback',
     label: resolved.label,
     base_url: resolved.base_url,
     default_model: resolved.default_model,

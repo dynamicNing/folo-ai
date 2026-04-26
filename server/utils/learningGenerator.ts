@@ -60,7 +60,11 @@ function uniqueTopicSlug(seed: string): string {
 function jsonFromText(text: string): Record<string, unknown> {
   const match = text.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('模型未返回 JSON')
-  return JSON.parse(match[0]) as Record<string, unknown>
+  try {
+    return JSON.parse(match[0]) as Record<string, unknown>
+  } catch {
+    throw new Error('模型返回的 JSON 格式无效，请重试')
+  }
 }
 
 function normalizeStringArray(value: unknown): string[] {

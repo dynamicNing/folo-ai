@@ -217,7 +217,7 @@ JSON Schema:
       "bullets": ["string", "string"]
     }
   ],
-  "watch_items": ["string"]
+  "watch_items": ["string"],
   "source_summary": "string"
 }
 `.trim(),
