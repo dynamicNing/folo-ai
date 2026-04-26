@@ -5,7 +5,7 @@ export default defineEventHandler(event => {
   requireAuth(event)
 
   try {
-    const result = db.prepare('DELETE FROM articles WHERE category LIKE "social/%"').run()
+    const result = db.prepare("DELETE FROM articles WHERE category LIKE 'social/%'").run()
     return {
       ok: true,
       deleted: result.changes,

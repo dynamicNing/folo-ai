@@ -25,7 +25,7 @@ interface ListFilters {
 }
 
 export function listArticles(filters: ListFilters = {}): ItemListResponse {
-  let sql = 'SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE category NOT LIKE "social/%" AND 1=1'
+  let sql = "SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE category NOT LIKE 'social/%' AND 1=1"
   const params: unknown[] = []
 
   if (filters.status) { sql += ' AND status = ?'; params.push(filters.status) }
@@ -90,7 +90,7 @@ export function removeArticle(slug: string): boolean {
 }
 
 export function listCategories(): string[] {
-  const rows = db.prepare('SELECT DISTINCT category FROM articles WHERE category NOT LIKE "social/%"').all() as { category: string }[]
+  const rows = db.prepare("SELECT DISTINCT category FROM articles WHERE category NOT LIKE 'social/%'").all() as { category: string }[]
   const categories = rows.map(r => r.category).filter(Boolean)
   // 手动添加 Social 标签（数据来自独立的 social API）
   return ['Social', ...categories]
