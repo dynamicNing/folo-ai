@@ -10,6 +10,44 @@
       </button>
     </div>
 
+    <!-- 使用说明 -->
+    <div class="guide-card card">
+      <div class="guide-header">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/>
+        </svg>
+        <h3 class="guide-title">使用说明</h3>
+      </div>
+      <div class="guide-content">
+        <div class="guide-section">
+          <h4 class="guide-subtitle">什么是 Skill？</h4>
+          <p>Skill 是可复用的 AI 能力单元，每个 skill 封装了特定的任务逻辑（如文章摘要、学习路径生成、日报撰写等），可以通过填写参数直接运行。</p>
+        </div>
+        <div class="guide-section">
+          <h4 class="guide-subtitle">如何使用？</h4>
+          <ol class="guide-steps">
+            <li><strong>选择 Skill</strong> — 点击下方卡片进入详情页</li>
+            <li><strong>填写参数</strong> — 根据 Input Schema 填写必填和可选参数</li>
+            <li><strong>立即运行</strong> — 点击「立即运行」按钮，自动跳转到 Run 详情页</li>
+            <li><strong>审批（如需要）</strong> — 部分 skill 需要审批（如写文件操作），在 Run 详情页点击「批准」后开始执行</li>
+            <li><strong>查看结果</strong> — 运行完成后，在 Output 区域查看结果</li>
+          </ol>
+        </div>
+        <div class="guide-section">
+          <h4 class="guide-subtitle">历史记录与导出</h4>
+          <p>所有运行记录保存在 <NuxtLink to="/admin/runs" class="guide-link">/admin/runs</NuxtLink>，可查看完整的 Input/Output。支持批量选中导出为 Markdown 格式，自动推送到 GitHub <code>content-archive/skill-runs/</code> 目录。</p>
+        </div>
+        <div class="guide-section">
+          <h4 class="guide-subtitle">内置 Skill 说明</h4>
+          <ul class="guide-list">
+            <li><strong>文章摘要润色</strong> — 压缩正文为摘要 + 要点，无需审批，秒出结果</li>
+            <li><strong>学习主题拆解</strong> — 生成完整章节式学习路径，需审批（写文件），结果在 <NuxtLink to="/learn" class="guide-link">/learn</NuxtLink> 查看</li>
+            <li><strong>每日 AI 简报</strong> — 三步流程（研究 → 规划 → 撰写），需审批，输出 Markdown 日报草稿</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <div class="filter-bar card">
       <label class="filter">
         <span class="filter-label">分类</span>
@@ -288,6 +326,25 @@ onMounted(load)
   padding-bottom: 1.25rem;
 }
 .filter-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.filter { display: flex; flex-direction: column; gap: 0.4rem; }
+
+.guide-card { padding: 1.5rem 1.75rem; margin-bottom: 1.75rem; background: var(--bg-raised); }
+.guide-header { display: flex; align-items: center; gap: 0.65rem; margin-bottom: 1.25rem; color: var(--accent); }
+.guide-title { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.01em; margin: 0; }
+.guide-content { display: flex; flex-direction: column; gap: 1.25rem; }
+.guide-section { }
+.guide-subtitle { font-size: 0.92rem; font-weight: 700; margin-bottom: 0.5rem; color: var(--text); }
+.guide-section p { color: var(--text-muted); font-size: 0.88rem; line-height: 1.65; margin: 0; }
+.guide-steps { margin: 0.5rem 0 0 1.25rem; padding: 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.75; }
+.guide-steps li { margin-bottom: 0.35rem; }
+.guide-steps strong { color: var(--text); font-weight: 600; }
+.guide-list { margin: 0.5rem 0 0 1.25rem; padding: 0; color: var(--text-muted); font-size: 0.88rem; line-height: 1.75; }
+.guide-list li { margin-bottom: 0.35rem; }
+.guide-list strong { color: var(--text); font-weight: 600; }
+.guide-link { color: var(--accent); text-decoration: none; font-weight: 600; }
+.guide-link:hover { text-decoration: underline; }
+.guide-section code { background: var(--bg-card); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.85em; font-family: ui-monospace, monospace; color: var(--text); border: 1px solid var(--border); }
+
 .filter { display: flex; flex-direction: column; gap: 0.4rem; }
 .filter-label { font-family: var(--font-display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
 .filter-select {
