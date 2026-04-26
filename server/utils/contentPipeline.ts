@@ -134,6 +134,12 @@ async function processFile({ path: repoPath, sha }: GithubFile): Promise<void> {
   const slug = slugFromPath(repoPath)
   const category = categoryFromPath(repoPath)
 
+  // 跳过 social/* 路径的文件，这些内容由独立的 social collector 管理
+  if (category.startsWith('social/')) {
+    console.log(`[pipeline] skip (social content): ${repoPath}`)
+    return
+  }
+
   const existing = db.prepare('SELECT sha FROM articles WHERE slug = ?').get(slug) as { sha?: string } | undefined
   if (existing?.sha === sha) {
     console.log(`[pipeline] skip (unchanged): ${repoPath}`)
