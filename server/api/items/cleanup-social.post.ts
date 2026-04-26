@@ -9,7 +9,7 @@ export default defineEventHandler(event => {
     return {
       ok: true,
       deleted: result.changes,
-      message: `已删除 ${result.changes} 条 social/* 标签的文章`,
+      message: `已删除 ${result.changes} 条旧的 social/* 分类记录`,
     }
   } catch (e) {
     apiError(500, (e as Error).message)

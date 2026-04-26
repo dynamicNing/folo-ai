@@ -24,19 +24,28 @@ interface ListFilters {
   pageSize?: number
 }
 
+function normalizeCategory(category: string): string {
+  return category.startsWith('social/') ? 'social' : category
+}
+
 export function listArticles(filters: ListFilters = {}): ItemListResponse {
-  let sql = "SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE category NOT LIKE 'social/%' AND 1=1"
+  let sql = 'SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE 1=1'
   const params: unknown[] = []
 
   if (filters.status) { sql += ' AND status = ?'; params.push(filters.status) }
-  if (filters.category) { sql += ' AND category = ?'; params.push(filters.category) }
+  if (filters.category === 'social') {
+    sql += " AND (category = 'social' OR category LIKE 'social/%')"
+  } else if (filters.category) {
+    sql += ' AND category = ?'
+    params.push(filters.category)
+  }
 
   sql += ' ORDER BY date DESC, updated_at DESC'
 
   let rows = db.prepare(sql).all(...params) as ArticleRow[]
   let items: Article[] = rows.map(r => ({
     slug: r.slug,
-    category: r.category,
+    category: normalizeCategory(r.category),
     title: r.title,
     tags: JSON.parse(r.tags || '[]'),
     date: r.date,
@@ -61,7 +70,7 @@ export function getArticle(slug: string): Article | null {
   if (!row) return null
   return {
     slug: row.slug,
-    category: row.category,
+    category: normalizeCategory(row.category),
     title: row.title,
     tags: JSON.parse(row.tags || '[]'),
     date: row.date,
@@ -90,8 +99,6 @@ export function removeArticle(slug: string): boolean {
 }
 
 export function listCategories(): string[] {
-  const rows = db.prepare("SELECT DISTINCT category FROM articles WHERE category NOT LIKE 'social/%'").all() as { category: string }[]
-  const categories = rows.map(r => r.category).filter(Boolean)
-  // 手动添加 Social 标签（数据来自独立的 social API）
-  return ['Social', ...categories]
+  const rows = db.prepare('SELECT DISTINCT category FROM articles').all() as { category: string }[]
+  return Array.from(new Set(rows.map(r => normalizeCategory(r.category)).filter(Boolean))).sort()
 }

@@ -26,8 +26,8 @@
       <div class="card" style="padding: 1rem 1.25rem;">
         <div class="cleanup-row">
           <div>
-            <div class="cleanup-title">清理 social/* 标签</div>
-            <div class="cleanup-desc">删除 articles 表中 category 以 social/ 开头的记录（这些内容由 Social Collector 独立管理）</div>
+            <div class="cleanup-title">清理旧的 social/* 标签</div>
+            <div class="cleanup-desc">删除历史遗留的 `social/*` 分类记录。现在 `social` 会和其它一级目录一样按普通分类同步。</div>
           </div>
           <button class="btn-danger" :disabled="cleaning" @click="cleanupSocial">
             {{ cleaning ? '清理中…' : '执行清理' }}
@@ -136,7 +136,7 @@ async function runSync() {
 
 async function cleanupSocial() {
   if (cleaning.value) return
-  if (!confirm('确认删除所有 social/* 标签的文章？此操作不可恢复。')) return
+  if (!confirm('确认删除所有旧的 social/* 分类记录？此操作不可恢复。')) return
   cleaning.value = true
   cleanupResult.value = null
   try {
