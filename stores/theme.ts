@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 
 export const useThemeStore = defineStore('theme', () => {
-  const theme = ref<'light' | 'dark'>('light')
+  const theme = ref<'light' | 'dark'>('dark')
 
   function apply() {
     if (import.meta.client) {

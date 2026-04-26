@@ -28,11 +28,11 @@ function formatDate(d: string): string {
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  padding: 1.35rem 0;
+  padding: 1.1rem 0;
   border-bottom: 1px solid var(--border);
   text-decoration: none;
   color: inherit;
-  transition: all 0.15s;
+  transition: all 0.12s;
   position: relative;
 }
 .feed-item::before {
@@ -40,11 +40,11 @@ function formatDate(d: string): string {
   position: absolute;
   left: -1.5rem;
   top: 0; bottom: 0;
-  width: 3px;
+  width: 2px;
   background: var(--accent);
-  border-radius: 0 2px 2px 0;
   opacity: 0;
-  transition: opacity 0.15s;
+  transition: opacity 0.12s;
+  box-shadow: 0 0 6px rgba(0,255,65,0.5);
 }
 .feed-item:hover::before { opacity: 1; }
 .feed-item:last-child { border-bottom: none; }
@@ -53,46 +53,54 @@ function formatDate(d: string): string {
 .item-meta {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-bottom: 0.45rem;
+  gap: 0.55rem;
+  margin-bottom: 0.35rem;
   flex-wrap: wrap;
 }
 .item-date {
-  font-size: 0.75rem;
-  font-family: var(--font-display);
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
   font-weight: 500;
   color: var(--text-muted);
-  letter-spacing: 0.02em;
+  letter-spacing: 0.06em;
 }
 .item-title {
-  font-size: clamp(1rem, 2.5vw, 1.2rem);
-  font-weight: 700;
-  line-height: 1.3;
-  letter-spacing: -0.01em;
+  font-size: clamp(0.88rem, 2vw, 1rem);
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: -0.005em;
   color: var(--text);
-  margin-bottom: 0.35rem;
-  transition: color 0.15s;
+  margin-bottom: 0.3rem;
+  transition: color 0.12s;
+  font-family: var(--font-mono);
 }
 .feed-item:hover .item-title { color: var(--accent); }
 .item-summary {
-  font-size: 0.875rem;
+  font-size: 0.78rem;
   color: var(--text-muted);
-  line-height: 1.6;
+  line-height: 1.5;
+  font-family: var(--font-mono);
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 .item-arrow {
-  font-size: 1.1rem;
+  font-size: 0.9rem;
   color: var(--text-light);
   flex-shrink: 0;
-  transition: all 0.15s;
+  font-family: var(--font-mono);
+  transition: all 0.12s;
 }
 .feed-item:hover .item-arrow { color: var(--accent); transform: translateX(3px); }
 
+[data-theme="light"] .feed-item::before { box-shadow: none; }
+[data-theme="light"] .item-title { font-family: var(--font-display); font-size: clamp(1rem, 2.5vw, 1.2rem); }
+[data-theme="light"] .item-summary { font-family: var(--font-body); font-size: 0.875rem; }
+[data-theme="light"] .item-date { font-family: var(--font-display); }
+
 @media (max-width: 480px) {
-  .feed-item { gap: 0.75rem; padding: 1.1rem 0; }
+  .feed-item { gap: 0.75rem; padding: 0.9rem 0; }
   .feed-item::before { display: none; }
   .item-summary { display: none; }
 }
