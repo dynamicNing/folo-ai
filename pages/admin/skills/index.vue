@@ -50,6 +50,15 @@
 
     <div class="filter-bar card">
       <label class="filter">
+        <span class="filter-label">搜索</span>
+        <input
+          v-model="searchQuery"
+          class="filter-input"
+          placeholder="名称或描述…"
+          @input="onSearch"
+        />
+      </label>
+      <label class="filter">
         <span class="filter-label">分类</span>
         <select v-model="filters.category" class="filter-select" @change="load">
           <option value="">全部</option>
@@ -94,7 +103,11 @@
     <div v-else-if="error" class="notice notice-error">{{ error }}</div>
     <div v-else-if="!skills.length" class="empty card">
       <p>当前筛选下没有可展示的 skill。</p>
-      <p class="empty-sub">内置 skill 会直接出现在这里；若要看到本机已安装的外部 skill，请点击右上角“同步目录”。</p>
+      <p class="empty-sub">内置 skill 会直接出现在这里；若要看到本机已安装的外部 skill，请点击右上角『同步目录』。</p>
+    </div>
+    <div v-else-if="searchQuery && !builtinSkills.length && !externalSkills.length" class="empty card">
+      <p>没有匹配 "{{ searchQuery }}" 的 skill。</p>
+      <p class="empty-sub">尝试搜索 slug、名称或描述的关键词。</p>
     </div>
 
     <template v-else>
@@ -152,7 +165,7 @@
 
         <div v-if="!externalSkills.length" class="empty card section-empty">
           <p>当前还没有同步到任何外部 skill。</p>
-          <p class="empty-sub">点击右上角“同步目录”后，系统会扫描预设目录并写入目录索引。</p>
+          <p class="empty-sub">点击右上角『同步目录』后，系统会扫描预设目录并写入目录索引。</p>
         </div>
 
         <template v-else>
@@ -221,6 +234,7 @@ const error = ref('')
 const syncResult = ref<SkillCatalogSyncResponse | null>(null)
 const skills = ref<SkillDefinitionSummary[]>([])
 const showAllExternal = ref(false)
+const searchQuery = ref('')
 const filters = ref<{
   category: SkillCategory | ''
   provider: Provider | ''
@@ -237,11 +251,21 @@ function sortSkills(list: SkillDefinitionSummary[]): SkillDefinitionSummary[] {
   return [...list].sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
 }
 
+function filterBySearch(list: SkillDefinitionSummary[]): SkillDefinitionSummary[] {
+  const q = searchQuery.value.trim().toLowerCase()
+  if (!q) return list
+  return list.filter(s =>
+    s.name.toLowerCase().includes(q) ||
+    s.description.toLowerCase().includes(q) ||
+    s.slug.toLowerCase().includes(q)
+  )
+}
+
 const builtinSkills = computed(() =>
-  sortSkills(skills.value.filter(skill => skill.source_origin === 'builtin'))
+  filterBySearch(sortSkills(skills.value.filter(skill => skill.source_origin === 'builtin')))
 )
 const externalSkills = computed(() =>
-  sortSkills(skills.value.filter(skill => skill.source_origin === 'external'))
+  filterBySearch(sortSkills(skills.value.filter(skill => skill.source_origin === 'external')))
 )
 const visibleExternalSkills = computed(() =>
   showAllExternal.value ? externalSkills.value : externalSkills.value.slice(0, 16)
@@ -278,6 +302,10 @@ async function syncCatalog() {
   } finally {
     syncing.value = false
   }
+}
+
+function onSearch() {
+  showAllExternal.value = false
 }
 
 function categoryLabel(category: SkillCategory): string {
@@ -325,7 +353,7 @@ onMounted(load)
   border-bottom: 1.5px solid var(--border);
   padding-bottom: 1.25rem;
 }
-.filter-bar { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 1rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
+.filter-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
 .filter { display: flex; flex-direction: column; gap: 0.4rem; }
 
 .guide-card { padding: 1.5rem 1.75rem; margin-bottom: 1.75rem; background: var(--bg-raised); }
@@ -347,6 +375,16 @@ onMounted(load)
 
 .filter { display: flex; flex-direction: column; gap: 0.4rem; }
 .filter-label { font-family: var(--font-display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
+.filter-input {
+  width: 100%;
+  border: 1.5px solid var(--border-mid);
+  border-radius: var(--radius);
+  background: var(--bg-card);
+  color: var(--text);
+  padding: 0.75rem 0.85rem;
+  font: inherit;
+}
+.filter-input::placeholder { color: var(--text-muted); }
 .filter-select {
   width: 100%;
   border: 1.5px solid var(--border-mid);
