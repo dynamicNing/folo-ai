@@ -5,9 +5,12 @@
         <h1 class="page-title">Skills</h1>
         <p class="page-sub">优先展示可直接调用的内置 skill；外部已安装 skill 单独作为目录管理，需要手动同步一次后才会出现在下方。</p>
       </div>
-      <button class="btn btn-primary" :disabled="syncing" @click="syncCatalog">
-        {{ syncing ? '同步中...' : '同步目录' }}
-      </button>
+      <div class="head-actions">
+        <NuxtLink to="/admin/skill-chat" class="btn btn-ghost">Chat 模式</NuxtLink>
+        <button class="btn btn-primary" :disabled="syncing" @click="syncCatalog">
+          {{ syncing ? '同步中...' : '同步目录' }}
+        </button>
+      </div>
     </div>
 
     <!-- 使用说明 -->
@@ -45,6 +48,26 @@
             <li><strong>每日 AI 简报</strong> — 三步流程（研究 → 规划 → 撰写），需审批，输出 Markdown 日报草稿</li>
           </ul>
         </div>
+      </div>
+    </div>
+
+    <div v-if="builtinQuickStarts.length" class="quickstart-card card">
+      <div class="quickstart-head">
+        <div>
+          <h3 class="quickstart-title">快速开始</h3>
+          <p class="quickstart-sub">直接进入带示例参数的 skill 详情页，先跑通一遍再调细节。</p>
+        </div>
+      </div>
+      <div class="quickstart-list">
+        <NuxtLink
+          v-for="item in builtinQuickStarts"
+          :key="item.slug"
+          :to="item.to"
+          class="quickstart-item"
+        >
+          <div class="quickstart-item-title">{{ item.title }}</div>
+          <div class="quickstart-item-prompt">{{ item.prompt }}</div>
+        </NuxtLink>
       </div>
     </div>
 
@@ -276,6 +299,38 @@ const externalOverflowCount = computed(() =>
 const showExternalSection = computed(() =>
   filters.value.source_origin !== 'builtin'
 )
+const builtinQuickStarts = computed(() => {
+  const presets = [
+    {
+      slug: 'article-summary-polisher',
+      title: '先试摘要润色',
+      prompt: '把技术长文压成一段摘要 + 3 个要点',
+      example: 0,
+    },
+    {
+      slug: 'learning-topic-generator',
+      title: '先试学习主题拆解',
+      prompt: '把一本书或一个技能拆成学习路径',
+      example: 0,
+    },
+    {
+      slug: 'daily-ai-briefing',
+      title: '先试 AI 日报草稿',
+      prompt: '观察 research -> plan -> compose 的完整事件流',
+      example: 0,
+    },
+  ]
+
+  return presets.flatMap(item => {
+    const skill = skills.value.find(row => row.slug === item.slug && row.source_origin === 'builtin')
+    if (!skill) return []
+    return [{
+      ...item,
+      title: skill.name,
+      to: `/admin/skills/${skill.slug}?example=${item.example}`,
+    }]
+  })
+})
 
 async function load() {
   loading.value = true
@@ -353,6 +408,7 @@ onMounted(load)
   border-bottom: 1.5px solid var(--border);
   padding-bottom: 1.25rem;
 }
+.head-actions { display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
 .filter-bar { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 1rem; padding: 1rem 1.1rem; margin-bottom: 1rem; }
 .filter { display: flex; flex-direction: column; gap: 0.4rem; }
 
@@ -372,6 +428,27 @@ onMounted(load)
 .guide-link { color: var(--accent); text-decoration: none; font-weight: 600; }
 .guide-link:hover { text-decoration: underline; }
 .guide-section code { background: var(--bg-card); padding: 0.15em 0.4em; border-radius: 3px; font-size: 0.85em; font-family: ui-monospace, monospace; color: var(--text); border: 1px solid var(--border); }
+
+.quickstart-card { padding: 1.2rem 1.3rem; margin-bottom: 1rem; }
+.quickstart-head { margin-bottom: 0.9rem; }
+.quickstart-title { font-size: 1rem; font-weight: 700; letter-spacing: -0.02em; }
+.quickstart-sub { margin-top: 0.25rem; color: var(--text-muted); font-size: 0.84rem; line-height: 1.55; }
+.quickstart-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.8rem; }
+.quickstart-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 0.95rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-raised);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 0.15s ease, transform 0.15s ease;
+}
+.quickstart-item:hover { border-color: var(--accent); transform: translateY(-1px); }
+.quickstart-item-title { font-size: 0.88rem; font-weight: 700; }
+.quickstart-item-prompt { color: var(--text-muted); font-size: 0.8rem; line-height: 1.55; }
 
 .filter { display: flex; flex-direction: column; gap: 0.4rem; }
 .filter-label { font-family: var(--font-display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); }
@@ -469,11 +546,13 @@ onMounted(load)
 
 @media (max-width: 900px) {
   .skill-list { grid-template-columns: 1fr; }
+  .quickstart-list { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
   .page { padding: 1.25rem 1rem 4rem; }
   .page-head, .section-head { flex-direction: column; }
+  .head-actions { width: 100%; }
   .filter-bar { grid-template-columns: 1fr; }
 }
 </style>

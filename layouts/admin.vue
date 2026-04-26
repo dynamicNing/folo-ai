@@ -37,6 +37,10 @@
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10 13a5 5 0 0 0 7.54.54l3.92-3.92a5 5 0 0 0-7.07-7.07L12 4"/><path d="M14 11a5 5 0 0 0-7.54-.54L2.54 14.38a5 5 0 0 0 7.07 7.07L12 20"/></svg>
           Skills
         </NuxtLink>
+        <NuxtLink to="/admin/skill-chat" class="nav-item" active-class="active" @click="drawerOpen = false">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8"/><path d="M8 13h5"/></svg>
+          Skill Chat
+        </NuxtLink>
         <NuxtLink to="/admin/runs" class="nav-item" active-class="active" @click="drawerOpen = false">
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 20V10"/><path d="m18 20-6-6-6 6"/><path d="M12 4v2"/><path d="M12 8h.01"/></svg>
           Runs

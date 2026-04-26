@@ -15,6 +15,27 @@ export interface SkillToolPolicy {
   approval_required: boolean
 }
 
+export interface SkillExample {
+  title: string
+  prompt?: string
+  note?: string
+  input?: Record<string, unknown>
+}
+
+export interface SkillSourceMetadata extends Record<string, unknown> {
+  frontmatter?: Record<string, unknown>
+  declared_provider?: Provider | string | null
+  declared_engine_type?: EngineType | string | null
+  declared_default_model?: string | null
+  skill_md_path?: string
+  imported_from?: string
+  content_excerpt?: string
+  tags?: string[]
+  trigger_keywords?: string[]
+  limitations?: string[]
+  examples?: SkillExample[]
+}
+
 export interface SkillDefinitionSummary {
   slug: string
   name: string
@@ -34,7 +55,7 @@ export interface SkillDefinitionSummary {
 export interface SkillDefinitionDetail extends SkillDefinitionSummary {
   source_type: SkillSourceType
   source_path: string | null
-  source_metadata: Record<string, unknown>
+  source_metadata: SkillSourceMetadata
   input_schema: Record<string, unknown>
   output_schema: Record<string, unknown>
   tool_policy: SkillToolPolicy

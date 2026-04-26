@@ -18,6 +18,7 @@ import type {
   SkillSourceType,
   SkillStatus,
   SkillToolPolicy,
+  SkillSourceMetadata,
   EngineType,
   RunStatus,
 } from '../../types/skill'
@@ -132,7 +133,7 @@ function rowToSkillDetail(row: SkillDefinitionRow): SkillDefinitionDetail {
     ...rowToSkillSummary(row),
     source_type: row.source_type,
     source_path: row.source_path,
-    source_metadata: parseJsonObject(row.source_metadata, {}),
+    source_metadata: parseJsonObject<SkillSourceMetadata>(row.source_metadata, {}),
     input_schema: parseJsonObject(row.input_schema, {}),
     output_schema: parseJsonObject(row.output_schema, {}),
     tool_policy: parseJsonObject<SkillToolPolicy>(row.tool_policy, {
