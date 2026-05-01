@@ -1,9 +1,23 @@
+import { execFile } from 'node:child_process'
 import { apiError } from '~/server/utils/auth'
 import { getResolvedAnthropicGatewayConfig } from '~/server/utils/appSettings'
 import { resolveAnthropicEndpoint, resolveAnthropicModel } from '~/server/utils/providers/anthropic'
 import { runDirectSkill, runAgentSkill } from '~/server/utils/skillRunner'
 import { getSkillChatSession, updateSkillChatSession } from '~/server/utils/skillChatStore'
 import { getSkillChatRunnableSkill, listSkillChatRunnableSkillDetails } from '~/server/utils/skillChatSkills'
+
+function stripAnsi(s: string): string {
+  return s.replace(/\x1B\[[0-9;]*[mGKHF]/g, '')
+}
+
+function runClaudeCli(prompt: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile('claude', ['-p', prompt], { timeout: 300_000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
+      if (err) return reject(err)
+      resolve(stripAnsi(stdout).trim() || stripAnsi(stderr).trim() || '已完成。')
+    })
+  })
+}
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => ({})) as {
@@ -20,6 +34,27 @@ export default defineEventHandler(async (event) => {
   const session = getSkillChatSession(sessionId)
   const history = (session?.messages as any[]) || []
 
+  function saveToSession(reply: string) {
+    if (!sessionId) return
+    const newHistory = [...history, { role: 'user', content: message }, { role: 'assistant', content: reply }]
+    updateSkillChatSession(sessionId, {
+      messages: newHistory,
+      messageCount: newHistory.length,
+      preview: message.slice(0, 60),
+    })
+  }
+
+  // Claude Code skill: spawn `claude -p "/slug message"`
+  if (selectedSkillSlug.startsWith('cc:')) {
+    const slug = selectedSkillSlug.slice(3)
+    if (!/^[a-z0-9-]+$/.test(slug)) apiError(400, '无效的 skill slug')
+    const prompt = `/${slug} ${message}`
+    const reply = await runClaudeCli(prompt).catch(err => `执行失败：${(err as Error).message}`)
+    saveToSession(reply)
+    return { reply }
+  }
+
+  // Built-in skill: Anthropic tool_use flow
   const selectedSkill = selectedSkillSlug ? getSkillChatRunnableSkill(selectedSkillSlug) : null
   const skills = selectedSkillSlug
     ? (selectedSkill ? [selectedSkill] : [])
@@ -104,19 +139,6 @@ export default defineEventHandler(async (event) => {
     assistantText = res1.content?.find((b: any) => b.type === 'text')?.text || ''
   }
 
-  const newHistory = [
-    ...history,
-    { role: 'user', content: message },
-    { role: 'assistant', content: assistantText },
-  ]
-
-  if (sessionId) {
-    updateSkillChatSession(sessionId, {
-      messages: newHistory,
-      messageCount: newHistory.length,
-      preview: message.slice(0, 60),
-    })
-  }
-
+  saveToSession(assistantText)
   return { reply: assistantText }
 })

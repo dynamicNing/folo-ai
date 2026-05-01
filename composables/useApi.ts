@@ -162,6 +162,8 @@ export function useApi() {
       }),
     getSkillChatSkills: (headers: Headers = {}) =>
       request<{ data: SkillDefinitionSummary[] }>('/skill-chat/skills', { headers }),
+    getClaudeCodeSkills: (headers: Headers = {}) =>
+      request<{ data: { slug: string; name: string; description: string }[] }>('/skill-chat/claude-code-skills', { headers }),
 
     // Settings
     getModelSettings: (headers: Headers = {}) =>

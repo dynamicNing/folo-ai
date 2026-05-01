@@ -76,13 +76,18 @@
           <div class="composer-toolbar">
             <label class="skill-picker">
               <span class="section-title">Skill</span>
-              <select v-model="selectedSkillSlug" class="skill-select" :disabled="submitting || !availableSkills.length">
-                <option value="">自动选择</option>
-                <option v-for="skill in availableSkills" :key="skill.slug" :value="skill.slug">{{ skill.name }}</option>
+              <select v-model="selectedSkillSlug" class="skill-select" :disabled="submitting || (!availableSkills.length && !claudeCodeSkills.length)">
+                <option value="">自动选择（内置）</option>
+                <optgroup v-if="claudeCodeSkills.length" label="Claude Code Skills">
+                  <option v-for="skill in claudeCodeSkills" :key="`cc:${skill.slug}`" :value="`cc:${skill.slug}`">{{ skill.name }}</option>
+                </optgroup>
+                <optgroup v-if="availableSkills.length" label="Built-in Skills">
+                  <option v-for="skill in availableSkills" :key="skill.slug" :value="skill.slug">{{ skill.name }}</option>
+                </optgroup>
               </select>
             </label>
             <span class="selected-skill-note">
-              {{ selectedSkill ? selectedSkill.description : '让模型从可用内置 skill 中自动匹配。' }}
+              {{ selectedSkillNote }}
             </span>
           </div>
 
@@ -150,6 +155,7 @@ const selectedSkillSlug = ref('')
 const messages = ref<ChatMessage[]>([])
 const sessions = ref<ChatSessionRecord[]>([])
 const availableSkills = ref<SkillDefinitionSummary[]>([])
+const claudeCodeSkills = ref<{ slug: string; name: string; description: string }[]>([])
 const currentSessionId = ref('')
 const messageViewport = ref<HTMLElement | null>(null)
 let sessionsReady = false
@@ -157,6 +163,18 @@ let sessionsReady = false
 const selectedSkill = computed(() =>
   availableSkills.value.find(skill => skill.slug === selectedSkillSlug.value) || null
 )
+
+const selectedCcSkill = computed(() => {
+  if (!selectedSkillSlug.value.startsWith('cc:')) return null
+  const slug = selectedSkillSlug.value.slice(3)
+  return claudeCodeSkills.value.find(s => s.slug === slug) || null
+})
+
+const selectedSkillNote = computed(() => {
+  if (selectedCcSkill.value) return selectedCcSkill.value.description
+  if (selectedSkill.value) return selectedSkill.value.description
+  return '让模型从可用内置 skill 中自动匹配。'
+})
 
 const sessionSummaries = computed<ChatSessionSummary[]>(() =>
   sessions.value.map(session => ({
@@ -331,6 +349,11 @@ async function loadAvailableSkills(): Promise<void> {
   availableSkills.value = response.data
 }
 
+async function loadClaudeCodeSkills(): Promise<void> {
+  const response = await api.getClaudeCodeSkills()
+  claudeCodeSkills.value = response.data
+}
+
 function pushMessage(message: ChatMessage): void {
   messages.value = [...messages.value, message]
   queueScrollToBottom()
@@ -402,7 +425,7 @@ watch(messages, () => {
 })
 
 loading.value = true
-Promise.all([loadAvailableSkills(), loadSessionsFromServer()])
+Promise.all([loadAvailableSkills(), loadClaudeCodeSkills(), loadSessionsFromServer()])
   .then(() => {
     sessionsReady = true
   })
