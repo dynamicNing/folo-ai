@@ -26,11 +26,11 @@ folo-ai/
 ├── middleware/auth.ts       # 保护 /admin/*
 ├── types/                   # article.ts · learning.ts
 ├── server/
-│   ├── api/                 # Nitro handler（auth / items / learn / social / webhook / health）
-│   └── utils/               # db, auth, fileStore, contentPipeline, learning*, collector
+│   ├── api/                 # Nitro handler（auth / items / learn / webhook / health）
+│   └── utils/               # db, auth, fileStore, contentPipeline, learning*
 ├── content/                 # 仓库内示例 md（archive 未克隆时回落）
 ├── scripts/                 # sync.ts · reset-db.ts · pull-archive.ts（tsx 跑）
-├── data/                    # articles.db · custom-feeds.json（gitignore）
+├── data/                    # articles.db（gitignore）
 └── content-archive/         # content-archive 本地克隆（gitignore）
 ```
 
@@ -109,7 +109,6 @@ node .output/server/index.mjs     # 或 npm run preview
 | `/admin` | 概览 |
 | `/admin/learn` | 学习主题生成入口 |
 | `/admin/items` · `/admin/items/:slug` | 内容管理 / 预览 |
-| `/admin/collector` | 社交采集 + 自定义 RSS |
 
 ### API（`/api` 下）
 
@@ -125,14 +124,6 @@ POST   /learn/generate             🔒
 GET    /learn/topics
 GET    /learn/topics/:slug
 GET    /learn/topics/:slug/chapters/:chapter
-GET    /social/status
-GET    /social/items               ?platform= &page= &pageSize=
-POST   /social/collect             🔒
-POST   /social/collect/custom      🔒
-GET    /social/feeds
-POST   /social/feeds               🔒
-DELETE /social/feeds/:id           🔒
-PATCH  /social/feeds/:id/toggle    🔒
 POST   /webhook/github             HMAC
 POST   /webhook/sync-all           🔒
 ```

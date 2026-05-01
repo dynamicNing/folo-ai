@@ -245,8 +245,7 @@ const progressSteps = computed<ProgressStep[]>(() => {
         event => {
           const combined = Number(event.payload.combined || 0)
           const articles = Number(event.payload.articles || 0)
-          const socials = Number(event.payload.socials || 0)
-          return `已汇总 ${combined} 条线索（文章 ${articles} / 社交 ${socials}）。`
+          return `已汇总 ${combined} 条线索（文章 ${articles}）。`
         },
         '正在收集可用来源与研究线索。'
       ),

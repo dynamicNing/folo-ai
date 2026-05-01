@@ -38,42 +38,6 @@ export interface AuthMeResponse {
   role?: string
 }
 
-export interface SocialItem {
-  title: string
-  url: string
-  source: string
-  description?: string
-  platform?: string
-  _platform?: string
-  fetched_at: string
-}
-
-export interface SocialStatus {
-  rsshubStatus: 'running' | 'stopped' | 'error' | 'unknown'
-  lastRun: string | null
-  platformLastItems: Record<string, { date?: string; count?: number }>
-}
-
-export interface SocialItemListResponse {
-  data: SocialItem[]
-  total: number
-  page: number
-  pageSize: number
-  totalPages: number
-}
-
-export interface CollectResult {
-  [platform: string]: { saved: number; error?: string }
-}
-
-export interface CustomFeed {
-  id: string
-  name: string
-  url: string
-  enabled: boolean
-  createdAt: string
-}
-
 export type SyncSource = 'manual' | 'webhook' | 'cli'
 export type SyncLogStatus = 'success' | 'failed' | 'partial' | 'running'
 

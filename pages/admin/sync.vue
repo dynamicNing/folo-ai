@@ -21,26 +21,6 @@
 
     <div class="section" style="margin-top: 1.5rem;">
       <div class="section-head">
-        <span>数据清理</span>
-      </div>
-      <div class="card" style="padding: 1rem 1.25rem;">
-        <div class="cleanup-row">
-          <div>
-            <div class="cleanup-title">清理旧的 social/* 标签</div>
-            <div class="cleanup-desc">删除历史遗留的 `social/*` 分类记录。现在 `social` 会和其它一级目录一样按普通分类同步。</div>
-          </div>
-          <button class="btn-danger" :disabled="cleaning" @click="cleanupSocial">
-            {{ cleaning ? '清理中…' : '执行清理' }}
-          </button>
-        </div>
-        <div v-if="cleanupResult" class="banner" :class="`banner-${cleanupResult.kind}`" style="margin-top: 0.75rem; margin-bottom: 0;">
-          {{ cleanupResult.text }}
-        </div>
-      </div>
-    </div>
-
-    <div class="section" style="margin-top: 1.5rem;">
-      <div class="section-head">
         <span>同步记录</span>
         <button class="refresh-btn" :disabled="loading" @click="load">刷新</button>
       </div>
@@ -98,9 +78,7 @@ const auth = useAuthStore()
 const logs = ref<SyncLog[]>([])
 const loading = ref(false)
 const running = ref(false)
-const cleaning = ref(false)
 const lastResult = ref<{ kind: 'success' | 'error' | 'partial'; text: string } | null>(null)
-const cleanupResult = ref<{ kind: 'success' | 'error'; text: string } | null>(null)
 const expanded = reactive(new Set<number>())
 
 async function load() {
@@ -131,28 +109,6 @@ async function runSync() {
     lastResult.value = { kind: 'error', text: '同步失败：' + (e as Error).message }
   } finally {
     running.value = false
-  }
-}
-
-async function cleanupSocial() {
-  if (cleaning.value) return
-  if (!confirm('确认删除所有旧的 social/* 分类记录？此操作不可恢复。')) return
-  cleaning.value = true
-  cleanupResult.value = null
-  try {
-    const res = await $fetch<{ ok: boolean; deleted: number; message: string }>('/api/items/cleanup-social', {
-      method: 'POST',
-      headers: auth.authHeader(),
-    })
-    cleanupResult.value = {
-      kind: 'success',
-      text: res.message,
-    }
-    await load()
-  } catch (e) {
-    cleanupResult.value = { kind: 'error', text: '清理失败：' + (e as Error).message }
-  } finally {
-    cleaning.value = false
   }
 }
 
@@ -233,14 +189,6 @@ onMounted(load)
 .badge-failed { background: rgba(220,38,38,0.12); color: #dc2626; }
 .badge-partial { background: rgba(234,179,8,0.12); color: #ca8a04; }
 .badge-running { background: rgba(59,130,246,0.12); color: #2563eb; }
-
-.cleanup-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
-.cleanup-title { font-size: 0.88rem; font-weight: 600; margin-bottom: 0.3rem; }
-.cleanup-desc { font-size: 0.8rem; color: var(--text-muted); line-height: 1.5; max-width: 480px; }
-.btn-danger { flex-shrink: 0; padding: 0.5rem 0.95rem; background: none; border: 1.5px solid #dc2626; color: #dc2626; border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600; font-family: var(--font-display); cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.btn-danger:hover:not(:disabled) { background: rgba(220,38,38,0.08); }
-.btn-danger:disabled { opacity: 0.45; cursor: not-allowed; }
-.card { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-card); }
 
 .spinner-sm { width: 12px; height: 12px; border: 2px solid currentColor; border-top-color: transparent; border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }

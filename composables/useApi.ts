@@ -1,13 +1,9 @@
 import type {
   Article,
   AuthMeResponse,
-  CollectResult,
-  CustomFeed,
   ItemListParams,
   ItemListResponse,
   LoginResponse,
-  SocialItemListResponse,
-  SocialStatus,
   SyncLog,
   SyncRunResult,
 } from '~/types/article'
@@ -182,30 +178,6 @@ export function useApi() {
         headers,
         body: JSON.stringify(payload),
       }),
-
-    // Social
-    getSocialStatus: () => request<SocialStatus>('/social/status'),
-    getSocialItems: (params: Record<string, unknown> = {}) =>
-      request<SocialItemListResponse>(`/social/items${toQuery(params)}`),
-    triggerCollect: (platform: string, headers: Headers) =>
-      request<CollectResult>('/social/collect', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ platform }),
-      }),
-    getCustomFeeds: () => request<CustomFeed[]>('/social/feeds'),
-    addCustomFeed: (name: string, url: string, headers: Headers) =>
-      request<CustomFeed>('/social/feeds', {
-        method: 'POST',
-        headers,
-        body: JSON.stringify({ name, url }),
-      }),
-    removeCustomFeed: (id: string, headers: Headers) =>
-      request<{ ok: true }>(`/social/feeds/${id}`, { method: 'DELETE', headers }),
-    toggleCustomFeed: (id: string, headers: Headers) =>
-      request<CustomFeed>(`/social/feeds/${id}/toggle`, { method: 'PATCH', headers }),
-    collectCustomFeeds: (headers: Headers) =>
-      request<CollectResult>('/social/collect/custom', { method: 'POST', headers }),
 
     // Sync
     runSyncAll: (headers: Headers) =>

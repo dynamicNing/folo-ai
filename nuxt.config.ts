@@ -26,7 +26,6 @@ export default defineNuxtConfig({
     githubWebhookSecret: process.env.GITHUB_WEBHOOK_SECRET || '',
     minimaxApiKey: process.env.MINIMAX_API_KEY || '',
     contentArchiveDir: process.env.CONTENT_ARCHIVE_DIR || './content-archive',
-    collectorScript: process.env.COLLECTOR_SCRIPT || '',
     public: {
       siteName: 'folo-ai',
     },

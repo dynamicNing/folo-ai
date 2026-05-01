@@ -1,6 +1,4 @@
 import { db } from './db'
-import { getItems } from './collector'
-import type { SocialItem } from '../../types/article'
 
 interface ArticleResearchRow {
   slug: string
@@ -13,7 +11,7 @@ interface ArticleResearchRow {
 }
 
 export interface ResearchSource {
-  kind: 'article' | 'social'
+  kind: 'article'
   title: string
   snippet: string
   date: string
@@ -27,7 +25,6 @@ export interface ResearchBundle {
   query: string
   keywords: string[]
   articles: ResearchSource[]
-  socials: ResearchSource[]
   combined: ResearchSource[]
 }
 
@@ -98,25 +95,6 @@ function articleToSource(row: ArticleResearchRow, keywords: string[], targetDate
   }
 }
 
-function socialToSource(item: SocialItem, keywords: string[], targetDate: string): ResearchSource | null {
-  const text = [item.title, item.description || '', item.source || '', item.platform || '', item._platform || ''].join(' ')
-  const score = countMatches(text, keywords) + recencyBonus(item.fetched_at, targetDate)
-  if (score <= 0) return null
-
-  return {
-    kind: 'social',
-    title: item.title,
-    snippet: normalizeSnippet(item.description || item.title),
-    date: item.fetched_at,
-    source: item.source || item.platform || item._platform || 'social',
-    score,
-    url: item.url,
-    meta: {
-      platform: item.platform || item._platform || '',
-    },
-  }
-}
-
 function dedupeSources(items: ResearchSource[]): ResearchSource[] {
   const map = new Map<string, ResearchSource>()
   for (const item of items) {
@@ -153,27 +131,12 @@ export async function gatherDailyBriefingResearch(input: {
       .filter(Boolean) as ResearchSource[]
   ).slice(0, limit)
 
-  const socialRes = await getItems({ platform: 'all', page: 1, pageSize: 120 }).catch(() => ({
-    data: [] as SocialItem[],
-    total: 0,
-    page: 1,
-    pageSize: 120,
-    totalPages: 0,
-  }))
-
-  const socialSources = dedupeSources(
-    socialRes.data
-      .map(item => socialToSource(item, keywords, input.date))
-      .filter(Boolean) as ResearchSource[]
-  ).slice(0, limit)
-
-  const combined = dedupeSources([...articleSources, ...socialSources]).slice(0, limit * 2)
+  const combined = dedupeSources(articleSources).slice(0, limit)
 
   return {
     query,
     keywords,
     articles: articleSources,
-    socials: socialSources,
     combined,
   }
 }

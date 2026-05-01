@@ -41,7 +41,6 @@ cp .env.example .env
 | 变量 | 说明 |
 | --- | --- |
 | `MINIMAX_API_KEY` | 无则 AI 字段降级为规则生成 |
-| `COLLECTOR_SCRIPT` | 社交采集脚本路径，`/admin/collector` 用 |
 | `PORT` | 默认 3000 |
 
 生成密码 hash：

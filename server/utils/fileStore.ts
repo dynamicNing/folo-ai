@@ -24,18 +24,12 @@ interface ListFilters {
   pageSize?: number
 }
 
-function normalizeCategory(category: string): string {
-  return category.startsWith('social/') ? 'social' : category
-}
-
 export function listArticles(filters: ListFilters = {}): ItemListResponse {
   let sql = 'SELECT slug, category, title, tags, date, summary, status, updated_at FROM articles WHERE 1=1'
   const params: unknown[] = []
 
   if (filters.status) { sql += ' AND status = ?'; params.push(filters.status) }
-  if (filters.category === 'social') {
-    sql += " AND (category = 'social' OR category LIKE 'social/%')"
-  } else if (filters.category) {
+  if (filters.category) {
     sql += ' AND category = ?'
     params.push(filters.category)
   }
@@ -45,7 +39,7 @@ export function listArticles(filters: ListFilters = {}): ItemListResponse {
   let rows = db.prepare(sql).all(...params) as ArticleRow[]
   let items: Article[] = rows.map(r => ({
     slug: r.slug,
-    category: normalizeCategory(r.category),
+    category: r.category,
     title: r.title,
     tags: JSON.parse(r.tags || '[]'),
     date: r.date,
@@ -70,7 +64,7 @@ export function getArticle(slug: string): Article | null {
   if (!row) return null
   return {
     slug: row.slug,
-    category: normalizeCategory(row.category),
+    category: row.category,
     title: row.title,
     tags: JSON.parse(row.tags || '[]'),
     date: row.date,
@@ -100,5 +94,5 @@ export function removeArticle(slug: string): boolean {
 
 export function listCategories(): string[] {
   const rows = db.prepare('SELECT DISTINCT category FROM articles').all() as { category: string }[]
-  return Array.from(new Set(rows.map(r => normalizeCategory(r.category)).filter(Boolean))).sort()
+  return Array.from(new Set(rows.map(r => r.category).filter(Boolean))).sort()
 }

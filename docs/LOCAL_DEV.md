@@ -10,7 +10,7 @@
  ├─ tech/*.md         │                   │    · fetchAllMdFiles() 列全量
  ├─ notes/*.md        ├─ webhook / sync ─▶│    · processFile()  md+frontmatter → marked → SQLite
  ├─ tools/*.md        │                   │    · syncAll()      全量同步入口
- └─ social/*.md      ─┘                   └─ data/articles.db  (表: articles / sync_state)
+ └─ *.md            ─┘                   └─ data/articles.db  (表: articles / sync_state)
                                                    │
  content-archive (local clone)                     ▼
  └─ CONTENT_ARCHIVE_DIR/ ─── @nuxt/content ──▶ ContentRenderer 渲染正文
@@ -26,7 +26,7 @@
 | `nuxt.config.ts` / `app.vue` | Nuxt 入口、runtimeConfig |
 | `pages/` | 文件路由（含 `admin/*` 子路由 + layout 切换） |
 | `components/` · `layouts/` · `stores/` · `composables/` · `middleware/` · `types/` | 前端 Vue 3 + TS |
-| `server/utils/` | db / auth / fileStore / contentPipeline / collector |
+| `server/utils/` | db / auth / fileStore / contentPipeline |
 | `server/api/**/*.ts` | Nitro handler（REST API） |
 | `content.config.ts` | @nuxt/content collection（读 CONTENT_ARCHIVE_DIR 或回落 content/） |
 | `scripts/*.ts` | 本地命令行工具（tsx 运行） |
@@ -95,6 +95,5 @@ curl -X POST http://localhost:3000/api/webhook/github \
 
 - **`GitHub tree fetch failed: 403`** → 未设 `GITHUB_TOKEN` 被限流；生成一个 PAT 填入 `.env`。
 - **AI 字段全为空** → 未设 `MINIMAX_API_KEY` 或 API 额度用尽，属正常降级，前端会显示解析规则生成的 title/summary。
-- **社交页空白** → 本地没配 `CONTENT_ARCHIVE_DIR`；跑 `npm run archive:pull` 并在 `.env` 指定目录。
 - **文章详情只显示元信息，正文空** → `CONTENT_ARCHIVE_DIR` 未克隆且 SQLite 里无 `content`；先 `npm run archive:pull` 再 `npm run sync`。
 - **`data/articles.db` 被 git 跟踪** → 已在 `.gitignore` 的 `data/` 覆盖。

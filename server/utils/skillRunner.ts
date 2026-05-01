@@ -176,9 +176,7 @@ function formatResearchSources(research: Awaited<ReturnType<typeof gatherDailyBr
   if (!research.combined.length) return '未检索到本地参考材料。'
 
   return research.combined.map((item, index) => {
-    const meta = item.kind === 'article'
-      ? `category=${item.source}`
-      : `source=${item.source}${item.url ? ` url=${item.url}` : ''}`
+    const meta = `category=${item.source}`
     return `${index + 1}. [${item.kind}] ${item.title}\n   - 日期: ${item.date}\n   - ${meta}\n   - 摘要: ${item.snippet}`
   }).join('\n')
 }
@@ -283,7 +281,6 @@ export async function runAgentSkill(input: AgentSkillRunInput): Promise<Record<s
       })
       await emit('agent.research.completed', {
         articles: research.articles.length,
-        socials: research.socials.length,
         combined: research.combined.length,
       })
 
@@ -317,7 +314,6 @@ export async function runAgentSkill(input: AgentSkillRunInput): Promise<Record<s
         sources: research.combined,
         source_counts: {
           articles: research.articles.length,
-          socials: research.socials.length,
           combined: research.combined.length,
         },
         _provider: input.provider,
