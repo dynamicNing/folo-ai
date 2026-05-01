@@ -222,6 +222,18 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_artifacts_run
     ON artifacts(run_uid, created_at DESC);
 
+  CREATE TABLE IF NOT EXISTS skill_chat_sessions (
+    id            TEXT PRIMARY KEY,
+    title         TEXT NOT NULL,
+    preview       TEXT NOT NULL DEFAULT '',
+    message_count INTEGER NOT NULL DEFAULT 0,
+    messages_json TEXT NOT NULL DEFAULT '[]',
+    created_at    TEXT NOT NULL,
+    updated_at    TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_skill_chat_sessions_updated
+    ON skill_chat_sessions(updated_at DESC);
+
   CREATE TABLE IF NOT EXISTS admin_logs (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     action     TEXT NOT NULL,

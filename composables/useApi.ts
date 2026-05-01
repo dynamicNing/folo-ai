@@ -12,6 +12,7 @@ import type {
   SyncRunResult,
 } from '~/types/article'
 import type { LearningChapterDetail, LearningDepth, LearningGenerateResponse, LearningSourceType, LearningTopic, LearningTopicDetail } from '~/types/learning'
+import type { SkillChatSessionCreateRequest, SkillChatSessionRecord, SkillChatSessionUpdateRequest } from '~/types/skillChat'
 import type {
   AnthropicGatewayDebugRequest,
   AnthropicGatewayDebugResponse,
@@ -142,6 +143,25 @@ export function useApi() {
     rejectSkillRunApproval: (runUid: string, approvalId: number, headers: Headers = {}) =>
       request<{ run: SkillRunDetail; approval: ApprovalRequest }>(`/skill-runs/${runUid}/approvals/${approvalId}/reject`, {
         method: 'POST',
+        headers,
+      }),
+    getSkillChatSessions: (headers: Headers = {}) =>
+      request<{ data: SkillChatSessionRecord[] }>('/skill-chat/sessions', { headers }),
+    createSkillChatSession: (payload: SkillChatSessionCreateRequest = {}, headers: Headers = {}) =>
+      request<SkillChatSessionRecord>('/skill-chat/sessions', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(payload),
+      }),
+    updateSkillChatSession: (sessionId: string, payload: SkillChatSessionUpdateRequest, headers: Headers = {}) =>
+      request<SkillChatSessionRecord>(`/skill-chat/sessions/${sessionId}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(payload),
+      }),
+    deleteSkillChatSession: (sessionId: string, headers: Headers = {}) =>
+      request<{ ok: true }>(`/skill-chat/sessions/${sessionId}`, {
+        method: 'DELETE',
         headers,
       }),
 

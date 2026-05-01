@@ -7,6 +7,8 @@ import type {
   Provider,
   SkillCategory,
   SkillDefinitionDetail,
+  SkillExample,
+  SkillSourceMetadata,
   SkillSourceType,
   SkillToolPolicy,
 } from '../../types/skill'
@@ -85,6 +87,47 @@ function normalizeObject(value: unknown): Record<string, unknown> {
     : {}
 }
 
+function normalizeStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(item => String(item || '').trim())
+    .filter(Boolean)
+}
+
+function normalizeExamples(value: unknown): SkillExample[] {
+  if (!Array.isArray(value)) return []
+  const result: SkillExample[] = []
+
+  for (const [index, item] of value.entries()) {
+    if (typeof item === 'string') {
+      const prompt = item.trim()
+      if (!prompt) continue
+      result.push({
+        title: `示例 ${index + 1}`,
+        prompt,
+        input: {},
+      })
+      continue
+    }
+
+    if (!item || typeof item !== 'object' || Array.isArray(item)) continue
+    const row = item as Record<string, unknown>
+    const title = String(row.title || row.name || row.prompt || `示例 ${index + 1}`).trim()
+    const prompt = typeof row.prompt === 'string' ? row.prompt.trim() : ''
+    const note = typeof row.note === 'string' ? row.note.trim() : ''
+    const input = normalizeObject(row.input)
+
+    result.push({
+      title,
+      prompt: prompt || undefined,
+      note: note || undefined,
+      input,
+    })
+  }
+
+  return result
+}
+
 function normalizePolicy(value: unknown): SkillToolPolicy {
   const raw = normalizeObject(value)
   return {
@@ -140,6 +183,20 @@ export function buildImportedSkillDefinition(input: ImportSkillInput): SkillDefi
   const createdAt = existing?.created_at || new Date().toISOString()
   const updatedAt = new Date().toISOString()
 
+  const sourceMetadata: SkillSourceMetadata = {
+    frontmatter,
+    declared_provider: declaredProvider,
+    declared_engine_type: declaredEngineType,
+    declared_default_model: String(frontmatter.default_model || '').trim() || null,
+    skill_md_path: skillFile,
+    imported_from: rawPath,
+    content_excerpt: firstParagraph(parsed.content).slice(0, 400),
+    tags: normalizeStringArray(frontmatter.tags),
+    trigger_keywords: normalizeStringArray(frontmatter.trigger_keywords),
+    limitations: normalizeStringArray(frontmatter.limitations),
+    examples: normalizeExamples(frontmatter.examples),
+  }
+
   const detail: SkillDefinitionDetail = {
     slug,
     name: displayName,
@@ -151,15 +208,7 @@ export function buildImportedSkillDefinition(input: ImportSkillInput): SkillDefi
     source_origin: 'external',
     source_label: String(frontmatter.name || path.basename(skillDir)).trim() || path.basename(skillDir),
     source_version: version,
-    source_metadata: {
-      frontmatter,
-      declared_provider: declaredProvider,
-      declared_engine_type: declaredEngineType,
-      declared_default_model: String(frontmatter.default_model || '').trim() || null,
-      skill_md_path: skillFile,
-      imported_from: rawPath,
-      content_excerpt: firstParagraph(parsed.content).slice(0, 400),
-    },
+    source_metadata: sourceMetadata,
     input_schema: normalizeObject(frontmatter.input_schema),
     output_schema: normalizeObject(frontmatter.output_schema),
     default_provider: 'external',

@@ -48,6 +48,55 @@
         </section>
       </div>
 
+      <div v-if="examples.length || limitations.length || triggerKeywords.length || tags.length" class="guide-grid">
+        <section v-if="examples.length" class="card panel">
+          <div class="section-title">示例用法</div>
+          <div class="example-list">
+            <article
+              v-for="(example, index) in examples"
+              :key="`${example.title}-${index}`"
+              :class="['example-card', activeExampleIndex === index ? 'example-card-active' : '']"
+            >
+              <div class="example-head">
+                <div>
+                  <div class="example-title">{{ example.title }}</div>
+                  <p v-if="example.prompt" class="example-prompt">{{ example.prompt }}</p>
+                </div>
+                <button v-if="canRun" class="btn btn-ghost" type="button" @click="applyExample(index)">
+                  {{ activeExampleIndex === index ? '已载入' : '填入表单' }}
+                </button>
+              </div>
+              <p v-if="example.note" class="example-note">{{ example.note }}</p>
+            </article>
+          </div>
+        </section>
+
+        <section v-if="triggerKeywords.length || limitations.length || tags.length" class="card panel">
+          <div class="section-title">触发提示与边界</div>
+
+          <div v-if="tags.length" class="info-block">
+            <div class="info-label">标签</div>
+            <div class="tag-row">
+              <span v-for="tag in tags" :key="tag" class="tag">{{ tag }}</span>
+            </div>
+          </div>
+
+          <div v-if="triggerKeywords.length" class="info-block">
+            <div class="info-label">未来 chat 模式可复用的触发词</div>
+            <div class="tag-row">
+              <span v-for="keyword in triggerKeywords" :key="keyword" class="tag">{{ keyword }}</span>
+            </div>
+          </div>
+
+          <div v-if="limitations.length" class="info-block">
+            <div class="info-label">当前边界</div>
+            <ul class="plain-list">
+              <li v-for="item in limitations" :key="item">{{ item }}</li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
       <div class="schema-grid">
         <section v-if="canRun" class="card panel">
           <div class="section-title">立即调用</div>
@@ -59,6 +108,7 @@
                 <span class="run-default-model">{{ defaultRunModelLabel }}</span>
               </div>
               <div class="field-hint">主流程固定走当前 skill 绑定的 Anthropic 路线。常规调用只需要填写参数并点击运行。</div>
+              <div v-if="activeExample" class="run-default-tip">当前已载入示例：{{ activeExample.title }}</div>
             </div>
 
             <div v-if="supportsGuidedForm" class="mode-switch">
@@ -136,7 +186,9 @@
               <button class="btn btn-primary" :disabled="running" @click="submitRun">
                 {{ running ? '运行中...' : '立即运行' }}
               </button>
-              <button class="btn btn-ghost" type="button" :disabled="running" @click="resetSampleInput">恢复示例参数</button>
+              <button class="btn btn-ghost" type="button" :disabled="running" @click="resetSampleInput">
+                {{ examples.length ? '恢复推荐示例' : '恢复示例参数' }}
+              </button>
               <span class="hint">{{ runHint }}</span>
             </div>
 
@@ -169,8 +221,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
-import type { EngineType, Provider, SkillCategory, SkillDefinitionDetail, SkillOrigin, SkillStatus } from '~/types/skill'
+import { computed, ref, watch } from 'vue'
+import type { EngineType, Provider, SkillCategory, SkillDefinitionDetail, SkillExample, SkillOrigin, SkillSourceMetadata, SkillStatus } from '~/types/skill'
 
 definePageMeta({ layout: 'admin', middleware: 'auth' })
 
@@ -194,6 +246,7 @@ const error = ref('')
 const skill = ref<SkillDefinitionDetail | null>(null)
 const running = ref(false)
 const runError = ref('')
+const activeExampleIndex = ref<number | null>(null)
 const inputMode = ref<InputMode>('guided')
 const guidedInput = ref<Record<string, any>>({})
 const runForm = ref<{
@@ -218,6 +271,7 @@ const policyItems = computed(() => {
 })
 
 const canRun = computed(() => !!skill.value && skill.value.status === 'active' && skill.value.source_origin === 'builtin')
+const sourceMetadata = computed<SkillSourceMetadata>(() => skill.value?.source_metadata || {})
 const schemaFields = computed<SchemaField[]>(() => {
   const schema = skill.value?.input_schema
   const properties = schema?.properties
@@ -253,6 +307,14 @@ const schemaFields = computed<SchemaField[]>(() => {
   })
 })
 const supportsGuidedForm = computed(() => schemaFields.value.length > 0)
+const tags = computed(() => stringList(sourceMetadata.value.tags))
+const triggerKeywords = computed(() => stringList(sourceMetadata.value.trigger_keywords))
+const limitations = computed(() => stringList(sourceMetadata.value.limitations))
+const examples = computed<SkillExample[]>(() => normalizeExamples(sourceMetadata.value.examples))
+const activeExample = computed<SkillExample | null>(() => {
+  if (activeExampleIndex.value == null) return null
+  return examples.value[activeExampleIndex.value] || null
+})
 const defaultRunModelLabel = computed(() => {
   if (!skill.value) return ''
   const model = skill.value.default_model.trim()
@@ -268,11 +330,36 @@ const runHint = computed(() => {
     : '当前会直接按 Anthropic 默认配置执行；如果需要审批，会先停在 waiting_approval。'
 })
 
+function stringList(value: unknown): string[] {
+  if (!Array.isArray(value)) return []
+  return value
+    .map(item => String(item || '').trim())
+    .filter(Boolean)
+}
+
+function normalizeExamples(value: unknown): SkillExample[] {
+  if (!Array.isArray(value)) return []
+  return value.flatMap((item, index) => {
+    if (!item || typeof item !== 'object' || Array.isArray(item)) return []
+    const row = item as Record<string, unknown>
+    const input = row.input && typeof row.input === 'object' && !Array.isArray(row.input)
+      ? row.input as Record<string, unknown>
+      : {}
+    return [{
+      title: String(row.title || `示例 ${index + 1}`).trim(),
+      prompt: typeof row.prompt === 'string' && row.prompt.trim() ? row.prompt.trim() : undefined,
+      note: typeof row.note === 'string' && row.note.trim() ? row.note.trim() : undefined,
+      input,
+    }]
+  })
+}
+
 async function load() {
   loading.value = true
   error.value = ''
   try {
     skill.value = await api.getSkill(String(route.params.slug || ''))
+    activeExampleIndex.value = null
     resetSampleInput()
   } catch (err) {
     error.value = (err as Error).message
@@ -341,6 +428,35 @@ function seedGuidedInput(schema: Record<string, unknown>, seed: Record<string, u
   return result
 }
 
+function loadPayloadIntoForm(seed: Record<string, unknown>): void {
+  if (!skill.value) return
+  guidedInput.value = seedGuidedInput(skill.value.input_schema, seed)
+  runForm.value = {
+    inputJson: JSON.stringify(seed, null, 2),
+    modelOverride: '',
+  }
+  inputMode.value = supportsGuidedForm.value ? 'guided' : 'raw'
+}
+
+function resolveRequestedExampleIndex(): number | null {
+  if (!examples.value.length) return null
+  const raw = Number(route.query.example)
+  if (Number.isInteger(raw) && raw >= 0 && raw < examples.value.length) return raw
+  return 0
+}
+
+function exampleSeed(example: SkillExample): Record<string, unknown> {
+  if (example.input && Object.keys(example.input).length > 0) return example.input
+  return skill.value ? sampleInputFromSchema(skill.value.input_schema) : {}
+}
+
+function applyExample(index: number): void {
+  const example = examples.value[index]
+  if (!example) return
+  activeExampleIndex.value = index
+  loadPayloadIntoForm(exampleSeed(example))
+}
+
 function buildPayloadFromGuidedInput(): Record<string, unknown> {
   if (!skill.value) return {}
 
@@ -394,13 +510,19 @@ function switchInputMode(mode: InputMode): void {
 
 function resetSampleInput(): void {
   if (!skill.value) return
-  const sample = sampleInputFromSchema(skill.value.input_schema)
-  guidedInput.value = seedGuidedInput(skill.value.input_schema, sample)
-  runForm.value = {
-    inputJson: JSON.stringify(sample, null, 2),
-    modelOverride: '',
+  if (activeExampleIndex.value != null && examples.value[activeExampleIndex.value]) {
+    applyExample(activeExampleIndex.value)
+    return
   }
-  inputMode.value = supportsGuidedForm.value ? 'guided' : 'raw'
+  const requestedExampleIndex = resolveRequestedExampleIndex()
+  if (requestedExampleIndex != null) {
+    applyExample(requestedExampleIndex)
+    return
+  }
+
+  activeExampleIndex.value = null
+  const sample = sampleInputFromSchema(skill.value.input_schema)
+  loadPayloadIntoForm(sample)
 }
 
 async function submitRun() {
@@ -459,6 +581,13 @@ function formatDate(value: string): string {
 }
 
 onMounted(load)
+watch(() => route.params.slug, () => {
+  load()
+})
+watch(() => route.query.example, () => {
+  activeExampleIndex.value = null
+  if (skill.value) resetSampleInput()
+})
 </script>
 
 <style scoped>
@@ -468,8 +597,9 @@ onMounted(load)
 .page-title { font-size: 1.45rem; font-weight: 700; letter-spacing: -0.03em; }
 .page-sub { margin-top: 0.35rem; color: var(--text-muted); font-size: 0.92rem; max-width: 720px; line-height: 1.6; }
 
-.grid, .schema-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
+.grid, .schema-grid, .guide-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; }
 .schema-grid { margin-top: 1rem; }
+.guide-grid { margin-top: 1rem; }
 .panel { padding: 1.15rem; }
 .section-title { font-family: var(--font-display); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 0.9rem; }
 .run-form { display: flex; flex-direction: column; gap: 0.85rem; }
@@ -499,6 +629,7 @@ onMounted(load)
 }
 .run-default-main { display: flex; align-items: center; gap: 0.55rem; flex-wrap: wrap; margin-top: 0.45rem; }
 .run-default-model { font-family: var(--font-display); font-size: 0.82rem; font-weight: 700; color: var(--accent); letter-spacing: 0.04em; }
+.run-default-tip { margin-top: 0.6rem; color: var(--text); font-size: 0.82rem; font-weight: 600; }
 .check-row {
   display: inline-flex;
   align-items: center;
@@ -519,6 +650,18 @@ onMounted(load)
 .kv-label { color: var(--text-muted); font-size: 0.84rem; }
 .kv-value { text-align: right; font-size: 0.86rem; font-weight: 600; }
 .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; word-break: break-all; }
+.example-list { display: flex; flex-direction: column; gap: 0.8rem; }
+.example-card { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.95rem 1rem; background: var(--bg-card); }
+.example-card-active { border-color: color-mix(in oklab, var(--accent) 38%, var(--border)); background: var(--bg-raised); }
+.example-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.example-title { font-size: 0.9rem; font-weight: 700; }
+.example-prompt { margin-top: 0.35rem; color: var(--text-muted); font-size: 0.84rem; line-height: 1.6; }
+.example-note { margin-top: 0.6rem; color: var(--text); font-size: 0.82rem; line-height: 1.55; }
+.info-block + .info-block { margin-top: 1rem; }
+.info-label { margin-bottom: 0.5rem; color: var(--text); font-size: 0.84rem; font-weight: 700; }
+.tag-row { display: flex; align-items: center; gap: 0.45rem; flex-wrap: wrap; }
+.plain-list { margin: 0; padding-left: 1.1rem; color: var(--text-muted); font-size: 0.86rem; line-height: 1.7; }
+.plain-list li + li { margin-top: 0.25rem; }
 
 .policy-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
 .policy-item { border: 1px solid var(--border); border-radius: var(--radius); padding: 0.85rem 0.9rem; background: var(--bg-card); }
@@ -545,7 +688,7 @@ onMounted(load)
 .badge-disabled { background: rgba(107,114,128,0.14); color: #4b5563; }
 
 @media (max-width: 900px) {
-  .grid, .schema-grid, .policy-grid, .guided-grid { grid-template-columns: 1fr; }
+  .grid, .schema-grid, .guide-grid, .policy-grid, .guided-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
@@ -553,5 +696,6 @@ onMounted(load)
   .page-head { flex-direction: column; }
   .kv-row { flex-direction: column; }
   .kv-value { text-align: left; }
+  .example-head { flex-direction: column; }
 }
 </style>
