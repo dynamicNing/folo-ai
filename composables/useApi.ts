@@ -164,6 +164,8 @@ export function useApi() {
         method: 'DELETE',
         headers,
       }),
+    getSkillChatSkills: (headers: Headers = {}) =>
+      request<{ data: SkillDefinitionSummary[] }>('/skill-chat/skills', { headers }),
 
     // Settings
     getModelSettings: (headers: Headers = {}) =>

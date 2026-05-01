@@ -327,10 +327,8 @@ async function loadSessionsFromServer(): Promise<void> {
 }
 
 async function loadAvailableSkills(): Promise<void> {
-  const response = await api.getSkills({ source_origin: 'builtin', status: 'active' })
+  const response = await api.getSkillChatSkills()
   availableSkills.value = response.data
-    .filter(skill => skill.source_origin === 'builtin' && skill.status === 'active')
-    .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
 }
 
 function pushMessage(message: ChatMessage): void {

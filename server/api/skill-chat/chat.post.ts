@@ -1,9 +1,9 @@
 import { apiError } from '~/server/utils/auth'
 import { getResolvedAnthropicGatewayConfig } from '~/server/utils/appSettings'
 import { resolveAnthropicEndpoint, resolveAnthropicModel } from '~/server/utils/providers/anthropic'
-import { DEFAULT_SKILL_DEFINITIONS } from '~/server/utils/skillRegistry'
 import { runDirectSkill, runAgentSkill } from '~/server/utils/skillRunner'
 import { getSkillChatSession, updateSkillChatSession } from '~/server/utils/skillChatStore'
+import { getSkillChatRunnableSkill, listSkillChatRunnableSkillDetails } from '~/server/utils/skillChatSkills'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event).catch(() => ({})) as {
@@ -20,11 +20,13 @@ export default defineEventHandler(async (event) => {
   const session = getSkillChatSession(sessionId)
   const history = (session?.messages as any[]) || []
 
-  const activeSkills = DEFAULT_SKILL_DEFINITIONS.filter(s => s.status === 'active')
+  const selectedSkill = selectedSkillSlug ? getSkillChatRunnableSkill(selectedSkillSlug) : null
   const skills = selectedSkillSlug
-    ? activeSkills.filter(s => s.slug === selectedSkillSlug)
-    : activeSkills
+    ? (selectedSkill ? [selectedSkill] : [])
+    : listSkillChatRunnableSkillDetails()
   if (selectedSkillSlug && !skills.length) apiError(400, '选择的 skill 不存在或不可用')
+  if (!skills.length) apiError(400, '当前没有可用 skill')
+
   const tools = skills.map(skill => ({
     name: skill.slug.replace(/-/g, '_'),
     description: skill.description,
