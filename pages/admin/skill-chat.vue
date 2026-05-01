@@ -73,6 +73,19 @@
         </section>
 
         <form class="card composer-panel" @submit.prevent="submitPrompt">
+          <div class="composer-toolbar">
+            <label class="skill-picker">
+              <span class="section-title">Skill</span>
+              <select v-model="selectedSkillSlug" class="skill-select" :disabled="submitting || !availableSkills.length">
+                <option value="">自动选择</option>
+                <option v-for="skill in availableSkills" :key="skill.slug" :value="skill.slug">{{ skill.name }}</option>
+              </select>
+            </label>
+            <span class="selected-skill-note">
+              {{ selectedSkill ? selectedSkill.description : '让模型从可用内置 skill 中自动匹配。' }}
+            </span>
+          </div>
+
           <label class="composer-field">
             <span class="section-title">输入需求</span>
             <textarea
@@ -100,6 +113,7 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import type { SkillChatSessionRecord as SkillChatSessionRemoteRecord } from '~/types/skillChat'
+import type { SkillDefinitionSummary } from '~/types/skill'
 
 definePageMeta({ layout: 'admin', middleware: 'auth' })
 
@@ -132,11 +146,17 @@ const error = ref('')
 const sessionError = ref('')
 const submitting = ref(false)
 const composer = ref('')
+const selectedSkillSlug = ref('')
 const messages = ref<ChatMessage[]>([])
 const sessions = ref<ChatSessionRecord[]>([])
+const availableSkills = ref<SkillDefinitionSummary[]>([])
 const currentSessionId = ref('')
 const messageViewport = ref<HTMLElement | null>(null)
 let sessionsReady = false
+
+const selectedSkill = computed(() =>
+  availableSkills.value.find(skill => skill.slug === selectedSkillSlug.value) || null
+)
 
 const sessionSummaries = computed<ChatSessionSummary[]>(() =>
   sessions.value.map(session => ({
@@ -306,6 +326,13 @@ async function loadSessionsFromServer(): Promise<void> {
   applySession(sessions.value[0])
 }
 
+async function loadAvailableSkills(): Promise<void> {
+  const response = await api.getSkills({ source_origin: 'builtin', status: 'active' })
+  availableSkills.value = response.data
+    .filter(skill => skill.source_origin === 'builtin' && skill.status === 'active')
+    .sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+}
+
 function pushMessage(message: ChatMessage): void {
   messages.value = [...messages.value, message]
   queueScrollToBottom()
@@ -322,7 +349,11 @@ async function submitPrompt(): Promise<void> {
   try {
     const { reply } = await $fetch<{ reply: string }>('/api/skill-chat/chat', {
       method: 'POST',
-      body: { session_id: currentSessionId.value, message: text },
+      body: {
+        session_id: currentSessionId.value,
+        message: text,
+        skill_slug: selectedSkillSlug.value || undefined,
+      },
     })
 
     pushMessage({ role: 'assistant', content: reply })
@@ -373,7 +404,7 @@ watch(messages, () => {
 })
 
 loading.value = true
-loadSessionsFromServer()
+Promise.all([loadAvailableSkills(), loadSessionsFromServer()])
   .then(() => {
     sessionsReady = true
   })
@@ -393,7 +424,7 @@ loadSessionsFromServer()
 
 .loading, .notice { padding: 1.5rem; text-align: center; }
 .loading { display: flex; align-items: center; justify-content: center; gap: 0.75rem; }
-.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.7s linear infinite; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.7s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .notice-error { background: rgba(220,38,38,0.08); color: #b91c1c; border: 1px solid rgba(220,38,38,0.24); border-radius: var(--radius); }
 
@@ -413,7 +444,7 @@ loadSessionsFromServer()
   margin-bottom: 0.4rem;
 }
 .session-item:hover { background: var(--bg-raised); }
-.session-item-active { background: var(--bg-raised); border-left: 3px solid var(--primary); }
+.session-item-active { background: var(--bg-raised); border-left: 3px solid var(--accent); }
 .session-item-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
 .session-title { font-size: 0.84rem; font-weight: 600; flex: 1; }
 .session-delete {
@@ -433,7 +464,7 @@ loadSessionsFromServer()
 .session-preview { margin-top: 0.3rem; font-size: 0.76rem; color: var(--text-muted); line-height: 1.4; }
 .session-meta { margin-top: 0.4rem; display: flex; gap: 0.75rem; font-size: 0.72rem; color: var(--text-muted); }
 
-.chat-panel { overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; }
+.chat-panel { overflow-y: auto; padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; color: var(--text); }
 .message-wrap { display: flex; }
 .message-wrap-user { justify-content: flex-end; }
 .message-wrap-assistant { justify-content: flex-start; }
@@ -442,8 +473,9 @@ loadSessionsFromServer()
   padding: 0.85rem 1rem;
   border-radius: var(--radius);
   border: 1px solid var(--border);
+  color: var(--text);
 }
-.bubble-user { background: var(--primary); color: white; border-color: var(--primary); }
+.bubble-user { background: var(--accent-subtle); color: var(--accent); border-color: var(--accent); }
 .bubble-assistant { background: var(--bg-card); }
 .bubble-role { font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.4rem; opacity: 0.7; }
 .bubble-text { font-size: 0.88rem; line-height: 1.6; white-space: pre-wrap; }
@@ -461,6 +493,29 @@ loadSessionsFromServer()
 .empty-sub { margin-top: 0.45rem; color: var(--text-muted); font-size: 0.88rem; line-height: 1.6; max-width: 52ch; }
 
 .composer-panel { padding: 1rem; }
+.composer-toolbar { display: flex; align-items: flex-end; gap: 0.9rem; margin-bottom: 0.9rem; }
+.skill-picker { display: flex; flex-direction: column; gap: 0.5rem; min-width: 220px; }
+.skill-select {
+  width: 100%;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--text);
+  font: inherit;
+}
+.skill-select:focus, .composer-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+.skill-select:disabled { opacity: 0.55; cursor: not-allowed; }
+.selected-skill-note {
+  flex: 1;
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+  padding-bottom: 0.55rem;
+}
 .composer-field { display: block; }
 .composer-input {
   width: 100%;
@@ -469,11 +524,14 @@ loadSessionsFromServer()
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg);
+  color: var(--text);
+  caret-color: var(--accent);
   font-family: inherit;
   font-size: 0.88rem;
   line-height: 1.6;
   resize: vertical;
 }
+.composer-input::placeholder { color: var(--text-muted); }
 .composer-actions { margin-top: 0.75rem; display: flex; align-items: center; gap: 0.75rem; }
 .composer-hint { margin-left: auto; font-size: 0.76rem; color: var(--text-muted); }
 
@@ -482,6 +540,7 @@ loadSessionsFromServer()
   border: 1px solid var(--border);
   border-radius: var(--radius);
   background: var(--bg-card);
+  color: var(--text);
   font-size: 0.84rem;
   font-weight: 600;
   cursor: pointer;
@@ -489,7 +548,7 @@ loadSessionsFromServer()
 }
 .btn:hover { background: var(--bg-raised); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.btn-primary { background: var(--primary); color: white; border-color: var(--primary); }
+.btn-primary { background: var(--accent); color: #000; border-color: var(--accent); }
 .btn-primary:hover { opacity: 0.9; }
 .btn-ghost { background: transparent; }
 .btn-sm { padding: 0.4rem 0.75rem; font-size: 0.8rem; }
@@ -497,5 +556,8 @@ loadSessionsFromServer()
 @media (max-width: 1024px) {
   .chat-shell { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto; height: auto; }
   .session-panel { grid-row: 1; max-height: 200px; }
+  .composer-toolbar { align-items: stretch; flex-direction: column; }
+  .skill-picker { min-width: 0; }
+  .selected-skill-note { padding-bottom: 0; }
 }
 </style>

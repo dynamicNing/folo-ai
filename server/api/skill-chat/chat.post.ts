@@ -1,3 +1,4 @@
+import { apiError } from '~/server/utils/auth'
 import { getResolvedAnthropicGatewayConfig } from '~/server/utils/appSettings'
 import { resolveAnthropicEndpoint, resolveAnthropicModel } from '~/server/utils/providers/anthropic'
 import { DEFAULT_SKILL_DEFINITIONS } from '~/server/utils/skillRegistry'
@@ -5,17 +6,31 @@ import { runDirectSkill, runAgentSkill } from '~/server/utils/skillRunner'
 import { getSkillChatSession, updateSkillChatSession } from '~/server/utils/skillChatStore'
 
 export default defineEventHandler(async (event) => {
-  const { session_id, message } = await readBody(event)
+  const body = await readBody(event).catch(() => ({})) as {
+    session_id?: string
+    message?: string
+    skill_slug?: string
+  }
+  const sessionId = typeof body.session_id === 'string' ? body.session_id : ''
+  const message = typeof body.message === 'string' ? body.message.trim() : ''
+  const selectedSkillSlug = typeof body.skill_slug === 'string' ? body.skill_slug.trim() : ''
 
-  const session = getSkillChatSession(session_id)
+  if (!message) apiError(400, 'message 不能为空')
+
+  const session = getSkillChatSession(sessionId)
   const history = (session?.messages as any[]) || []
 
-  const skills = DEFAULT_SKILL_DEFINITIONS.filter(s => s.status === 'active')
+  const activeSkills = DEFAULT_SKILL_DEFINITIONS.filter(s => s.status === 'active')
+  const skills = selectedSkillSlug
+    ? activeSkills.filter(s => s.slug === selectedSkillSlug)
+    : activeSkills
+  if (selectedSkillSlug && !skills.length) apiError(400, '选择的 skill 不存在或不可用')
   const tools = skills.map(skill => ({
     name: skill.slug.replace(/-/g, '_'),
     description: skill.description,
     input_schema: skill.input_schema,
   }))
+  const selectedToolName = selectedSkillSlug ? tools[0]?.name : ''
 
   const messages = [
     ...history.filter((m: any) => m.role === 'user' || m.role === 'assistant').map((m: any) => ({
@@ -37,10 +52,15 @@ export default defineEventHandler(async (event) => {
       : { 'x-api-key': gateway.api_key }),
   }
 
+  const requestBody: Record<string, unknown> = { model, max_tokens: 1024, tools, messages }
+  if (selectedToolName) {
+    requestBody.tool_choice = { type: 'tool', name: selectedToolName }
+  }
+
   const res1 = await $fetch<any>(endpoint, {
     method: 'POST',
     headers,
-    body: { model, max_tokens: 1024, tools, messages },
+    body: requestBody,
   })
 
   const toolUse = res1.content?.find((b: any) => b.type === 'tool_use')
@@ -88,8 +108,8 @@ export default defineEventHandler(async (event) => {
     { role: 'assistant', content: assistantText },
   ]
 
-  if (session_id) {
-    updateSkillChatSession(session_id, {
+  if (sessionId) {
+    updateSkillChatSession(sessionId, {
       messages: newHistory,
       messageCount: newHistory.length,
       preview: message.slice(0, 60),
