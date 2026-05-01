@@ -9,6 +9,7 @@
 - `pm2`：`npm i -g pm2`
 - Nginx（反代 + HTTPS）
 - `certbot`（Let's Encrypt 证书）
+- 如需使用后台 Skill Chat 的 Claude Code Skills：服务器上需要安装并登录 `claude` CLI，并把对应 skill 安装到运行 folo-ai 的系统用户下
 
 ## 2. 首次部署
 
@@ -42,6 +43,8 @@ cp .env.example .env
 | --- | --- |
 | `MINIMAX_API_KEY` | 无则 AI 字段降级为规则生成 |
 | `PORT` | 默认 3000 |
+| `SKILL_CHAT_CLAUDE_SKIP_PERMISSIONS` | Claude Code skill 是否跳过权限确认，默认 `1`；root/sudo 进程会自动禁用 |
+| `SKILL_CHAT_CLAUDE_TIMEOUT_MS` | Claude Code skill 单次超时，默认 `300000` |
 
 生成密码 hash：
 
@@ -65,6 +68,35 @@ pm2 save && pm2 startup
 ```
 
 默认监听 `0.0.0.0:3000`。
+
+### 2.5 Skill Chat / Claude Code Skills
+
+`/admin/skill-chat` 有两条执行路径：
+
+- Built-in Skills：走本系统内置 runner 和 Anthropic/OpenAI provider。
+- Claude Code Skills：扫描 `~/.claude/skills`，提交时执行 `claude -p "/skill-slug 用户输入" --output-format json`。
+
+如果要在线上运行 Claude Code Skills，建议用专门的非 root 用户运行 PM2。Claude Code 明确禁止 root/sudo 进程使用 `--dangerously-skip-permissions`；本项目会在检测到 root 进程时自动不传这个参数，但需要写文件或运行命令的 skill 仍可能因权限确认失败。
+
+推荐部署方式：
+
+```bash
+# 示例：用 folo 用户运行应用，并在该用户下配置 claude
+sudo adduser --disabled-password --gecos "" folo
+sudo chown -R folo:folo /path/to/folo-ai /path/to/content-archive
+sudo -iu folo
+cd /path/to/folo-ai
+claude auth
+npm install
+npm run build
+pm2 start .output/server/index.mjs --name folo-ai --update-env
+```
+
+确认点：
+
+- `which claude` 在 PM2 运行用户下能找到 CLI。
+- `~/.claude/skills` 在 PM2 运行用户下包含要调用的 skill，例如 `~/.claude/skills/ljg-card/SKILL.md`。
+- `.env` 中保留 `SKILL_CHAT_CLAUDE_SKIP_PERMISSIONS=1` 时，只有非 root 进程会实际传 `--dangerously-skip-permissions`。
 
 ## 3. Nginx + HTTPS
 
@@ -138,6 +170,9 @@ pm2 restart folo-ai --update-env
 | admin 登录失败 | `ADMIN_PASSWORD_HASH` 是 bcryptjs 结果、不是明文；`JWT_SECRET` 非空 |
 | 同步 403 `rate limit` | 未设 `GITHUB_TOKEN` 或 token 过期 |
 | 部署后改 `.env` 不生效 | `pm2 restart folo-ai --update-env`（必须 `--update-env`） |
+| Skill Chat 报 `--dangerously-skip-permissions cannot be used with root/sudo privileges` | folo-ai 旧版本或手动命令仍在 root 下传该参数；升级后重启，最好改用非 root 用户运行 PM2 |
+| Skill Chat 看不到 Claude Code skill | 检查 PM2 运行用户的 `~/.claude/skills`，不是当前 SSH 用户或 `/root` 下的目录 |
+| Skill Chat 报 `Claude CLI 启动失败` | 检查 PM2 运行用户的 `PATH` 是否包含 `claude`；必要时在 PM2 ecosystem 中显式设置 PATH |
 
 ### 常用日志
 
