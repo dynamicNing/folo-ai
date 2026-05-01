@@ -12,10 +12,22 @@ function stripAnsi(s: string): string {
 
 function runClaudeCli(prompt: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile('claude', ['-p', prompt], { timeout: 300_000, maxBuffer: 10 * 1024 * 1024 }, (err, stdout, stderr) => {
-      if (err) return reject(err)
-      resolve(stripAnsi(stdout).trim() || stripAnsi(stderr).trim() || '已完成。')
-    })
+    execFile(
+      'claude',
+      ['-p', prompt, '--dangerously-skip-permissions', '--output-format', 'json'],
+      { timeout: 300_000, maxBuffer: 10 * 1024 * 1024 },
+      (err, stdout, stderr) => {
+        if (err) return reject(err)
+        const raw = stripAnsi(stdout).trim()
+        try {
+          const parsed = JSON.parse(raw) as { result?: string; is_error?: boolean }
+          if (parsed.is_error) return reject(new Error(parsed.result || '执行出错'))
+          resolve(parsed.result?.trim() || '已完成。')
+        } catch {
+          resolve(raw || stripAnsi(stderr).trim() || '已完成。')
+        }
+      },
+    )
   })
 }
 
